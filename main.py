@@ -1,5 +1,5 @@
 """
-PropManage - AI-Powered Property Management Platform
+PropManager AI - AI-Powered Property Management Platform
 Main FastAPI Application
 """
 
@@ -19,7 +19,7 @@ from database import engine, get_db, Base
 from models import (
     User, Subscription, Property, Unit, TenantProfile, Vehicle,
     MaintenanceRequest, ParkingComplaint, ChatMessage, Notification, ShowingRequest, Payout,
-    Violation, Fine
+    Violation, Fine, GuestPass
 )
 from email_service import send_fine_email
 from schemas import (
@@ -32,6 +32,7 @@ from schemas import (
     MaintenanceRequestCreate, MaintenanceRequestResponse,
     ChatMessageRequest, ChatMessageResponse, ChatHistoryItem,
     PayoutCreate,
+    GuestPassCreate, GuestPassResponse,
 )
 from auth import (
     verify_password, get_password_hash, create_access_token,
@@ -42,7 +43,41 @@ from stacy import StacyAssistant, StacyLandlordAssistant
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="PropManage", version="1.0.0")
+
+def _ensure_runtime_schema_updates():
+    """Apply lightweight SQLite schema updates for existing local DBs."""
+    with engine.begin() as conn:
+        conn.exec_driver_sql("""
+            CREATE TABLE IF NOT EXISTS guest_passes (
+                id INTEGER PRIMARY KEY,
+                tenant_profile_id INTEGER NOT NULL,
+                property_id INTEGER NOT NULL,
+                make VARCHAR NOT NULL,
+                model VARCHAR NOT NULL,
+                color VARCHAR NOT NULL,
+                plate_number VARCHAR NOT NULL,
+                duration_hours INTEGER NOT NULL,
+                status VARCHAR DEFAULT 'active',
+                created_at DATETIME,
+                expires_at DATETIME NOT NULL
+            )
+        """)
+        conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_guest_passes_plate_number ON guest_passes (plate_number)")
+
+        prop_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(properties)").fetchall()}
+        alter_map = {
+            "max_guest_passes_per_unit": "ALTER TABLE properties ADD COLUMN max_guest_passes_per_unit INTEGER DEFAULT 2",
+            "max_guest_pass_duration_hours": "ALTER TABLE properties ADD COLUMN max_guest_pass_duration_hours INTEGER DEFAULT 72",
+            "allow_guest_passes": "ALTER TABLE properties ADD COLUMN allow_guest_passes BOOLEAN DEFAULT 1",
+        }
+        for col, stmt in alter_map.items():
+            if col not in prop_cols:
+                conn.exec_driver_sql(stmt)
+
+
+_ensure_runtime_schema_updates()
+
+app = FastAPI(title="PropManager AI", version="1.0.0")
 
 # CORS
 app.add_middleware(
@@ -342,6 +377,32 @@ def update_property(property_id: int, data: PropertyCreate, user: User = Depends
     return prop
 
 
+@app.put("/api/properties/{property_id}/settings")
+def update_property_settings(property_id: int, payload: dict, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    prop = db.query(Property).filter(Property.id == property_id, Property.landlord_id == user.id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    allowed = {
+        "max_vehicles_per_unit",
+        "max_guest_passes_per_unit",
+        "max_guest_pass_duration_hours",
+        "allow_guest_passes",
+        "parking_violation_fee",
+        "maintenance_email",
+        "maintenance_phone",
+        "broker_email",
+        "rent_info",
+    }
+    for key, val in payload.items():
+        if key in allowed:
+            setattr(prop, key, val)
+
+    db.commit()
+    db.refresh(prop)
+    return {"message": "Settings updated", "property_id": prop.id}
+
+
 # ─── Units ───────────────────────────────────────────────────────────────────
 
 @app.post("/api/properties/{property_id}/units", response_model=UnitResponse)
@@ -559,6 +620,81 @@ def my_vehicles(user: User = Depends(get_current_user), db: Session = Depends(ge
     if not profile:
         return []
     return db.query(Vehicle).filter(Vehicle.tenant_profile_id == profile.id).all()
+
+
+# ─── Guest Passes ────────────────────────────────────────────────────────────
+
+@app.post("/api/my/guest-passes", response_model=GuestPassResponse)
+def create_guest_pass(data: GuestPassCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "tenant":
+        raise HTTPException(status_code=403, detail="Only tenants can create guest passes")
+
+    profile = db.query(TenantProfile).filter(TenantProfile.user_id == user.id, TenantProfile.is_active == True).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Tenant profile not found")
+
+    prop = db.query(Property).filter(Property.id == profile.property_id).first()
+    if not prop or not prop.allow_guest_passes:
+        raise HTTPException(status_code=403, detail="Guest passes are disabled for this property")
+
+    if data.duration_hours <= 0 or data.duration_hours > prop.max_guest_pass_duration_hours:
+        raise HTTPException(status_code=400, detail=f"Duration must be between 1 and {prop.max_guest_pass_duration_hours} hours")
+
+    now = datetime.datetime.utcnow()
+    db.query(GuestPass).filter(GuestPass.status == "active", GuestPass.expires_at <= now).update({"status": "expired"})
+    db.commit()
+
+    active_count = db.query(GuestPass).filter(
+        GuestPass.tenant_profile_id == profile.id,
+        GuestPass.status == "active",
+        GuestPass.expires_at > now
+    ).count()
+    if active_count >= prop.max_guest_passes_per_unit:
+        raise HTTPException(status_code=403, detail=f"Maximum {prop.max_guest_passes_per_unit} active guest passes allowed")
+
+    guest = GuestPass(
+        tenant_profile_id=profile.id,
+        property_id=profile.property_id,
+        make=data.make.strip(),
+        model=data.model.strip(),
+        color=data.color.strip(),
+        plate_number=data.plate_number.strip().upper(),
+        duration_hours=data.duration_hours,
+        status="active",
+        expires_at=now + datetime.timedelta(hours=data.duration_hours),
+    )
+    db.add(guest)
+    db.commit()
+    db.refresh(guest)
+    return guest
+
+
+@app.get("/api/my/guest-passes", response_model=List[GuestPassResponse])
+def my_guest_passes(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    profile = db.query(TenantProfile).filter(TenantProfile.user_id == user.id, TenantProfile.is_active == True).first()
+    if not profile:
+        return []
+
+    now = datetime.datetime.utcnow()
+    db.query(GuestPass).filter(GuestPass.status == "active", GuestPass.expires_at <= now).update({"status": "expired"})
+    db.commit()
+
+    return db.query(GuestPass).filter(GuestPass.tenant_profile_id == profile.id).order_by(GuestPass.created_at.desc()).all()
+
+
+@app.delete("/api/my/guest-passes/{guest_pass_id}")
+def cancel_guest_pass(guest_pass_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    profile = db.query(TenantProfile).filter(TenantProfile.user_id == user.id, TenantProfile.is_active == True).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Tenant profile not found")
+
+    guest = db.query(GuestPass).filter(GuestPass.id == guest_pass_id, GuestPass.tenant_profile_id == profile.id).first()
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest pass not found")
+
+    guest.status = "cancelled"
+    db.commit()
+    return {"message": "Guest pass cancelled"}
 
 
 # ─── Maintenance Requests ────────────────────────────────────────────────────
@@ -1000,6 +1136,64 @@ def list_fines(property_id: int, user: User = Depends(get_current_user), db: Ses
     return result
 
 
+@app.post("/api/properties/{property_id}/violations")
+def create_violation(property_id: int, payload: dict, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    prop = db.query(Property).filter(Property.id == property_id, Property.landlord_id == user.id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    v = Violation(
+        property_id=property_id,
+        tenant_profile_id=payload.get("tenant_profile_id"),
+        type=payload.get("type", "other"),
+        description=payload.get("description", "Manual violation created by landlord."),
+        status=payload.get("status", "pending"),
+        review_notes=payload.get("review_notes"),
+        reviewed_by=user.id if payload.get("status") in ["dismissed", "fined"] else None,
+        reviewed_at=datetime.datetime.utcnow() if payload.get("status") in ["dismissed", "fined"] else None,
+    )
+    db.add(v)
+    db.commit()
+    db.refresh(v)
+    return {"id": v.id, "message": "Violation created"}
+
+
+@app.put("/api/violations/{violation_id}")
+def edit_violation(violation_id: int, payload: dict, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    v = db.query(Violation).filter(Violation.id == violation_id).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Violation not found")
+    prop = db.query(Property).filter(Property.id == v.property_id, Property.landlord_id == user.id).first()
+    if not prop:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    for key in ["type", "description", "status", "review_notes", "tenant_profile_id"]:
+        if key in payload:
+            setattr(v, key, payload[key])
+    if "status" in payload and payload["status"] in ["dismissed", "fined", "pending"]:
+        v.reviewed_by = user.id
+        v.reviewed_at = datetime.datetime.utcnow()
+    db.commit()
+    return {"message": "Violation updated"}
+
+
+@app.delete("/api/violations/{violation_id}")
+def delete_violation(violation_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    v = db.query(Violation).filter(Violation.id == violation_id).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Violation not found")
+    prop = db.query(Property).filter(Property.id == v.property_id, Property.landlord_id == user.id).first()
+    if not prop:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    fine = db.query(Fine).filter(Fine.violation_id == v.id).first()
+    if fine:
+        db.delete(fine)
+    db.delete(v)
+    db.commit()
+    return {"message": "Violation removed"}
+
+
 @app.get("/api/my/violations")
 def my_violations(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get the current tenant's violations."""
@@ -1125,6 +1319,46 @@ def owner_toggle_landlord(landlord_id: int, user: User = Depends(require_owner),
     landlord.is_active = not landlord.is_active
     db.commit()
     return {"id": landlord.id, "is_active": landlord.is_active}
+
+
+@app.put("/api/owner/landlords/{landlord_id}/plan")
+def owner_change_landlord_plan(landlord_id: int, payload: dict, user: User = Depends(require_owner), db: Session = Depends(get_db)):
+    landlord = db.query(User).filter(User.id == landlord_id, User.role == "landlord").first()
+    if not landlord:
+        raise HTTPException(status_code=404, detail="Landlord not found")
+
+    plan_key = payload.get("plan")
+    if plan_key not in PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+
+    plan_info = PLANS[plan_key]
+    sub = db.query(Subscription).filter(Subscription.landlord_id == landlord_id).first()
+    if not sub:
+        sub = Subscription(landlord_id=landlord_id, plan=plan_key, is_active=True, started_at=datetime.datetime.utcnow(),
+                           max_properties=plan_info["max_properties"], max_tenants=plan_info["max_tenants"],
+                           monthly_price=plan_info["monthly_price"], setup_fee=plan_info["setup_fee"])
+        db.add(sub)
+    else:
+        sub.plan = plan_key
+        sub.max_properties = plan_info["max_properties"]
+        sub.max_tenants = plan_info["max_tenants"]
+        sub.monthly_price = plan_info["monthly_price"]
+        sub.setup_fee = plan_info["setup_fee"]
+        sub.is_active = True
+
+    db.add(Notification(
+        user_id=landlord.id,
+        property_id=None,
+        type="email",
+        recipient_email=landlord.email,
+        subject="Your PropManager AI plan was updated",
+        message=f"Hello {landlord.first_name}, your plan has been changed to {plan_info['name']} by platform management.",
+        status="sent",
+        sent_at=datetime.datetime.utcnow(),
+    ))
+
+    db.commit()
+    return {"message": "Plan updated", "plan": plan_key}
 
 
 @app.get("/api/owner/payouts")

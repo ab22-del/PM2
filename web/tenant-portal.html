@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenant Portal — PropManage</title>
+    <title>Tenant Portal — PropManager AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/web/css/style.css">
     <style>
@@ -171,14 +171,15 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <div class="logo-icon">P</div>
-            <span>PropManage</span>
+            <div class="logo-icon">PA</div>
+            <span>PropManager AI</span>
         </div>
         <nav class="sidebar-nav">
             <div class="section-label">Main</div>
             <a href="#" class="active" data-section="chat"><span class="icon">&#129302;</span> Chat with Stacy</a>
             <a href="#" data-section="profile"><span class="icon">&#128100;</span> My Profile</a>
             <a href="#" data-section="maintenance"><span class="icon">&#128295;</span> Maintenance</a>
+            <a href="#" data-section="guest-passes"><span class="icon">&#128663;</span> Guest Passes</a>
             <a href="#" data-section="vehicles"><span class="icon">&#128663;</span> My Vehicles</a>
             <a href="#" data-section="violations"><span class="icon">&#9888;</span> Violations & Fines</a>
             <a href="#" data-section="notifications"><span class="icon">&#128276;</span> Notifications</a>
@@ -189,7 +190,7 @@
                 <div class="name" id="user-name">Tenant</div>
                 <div class="role">Tenant</div>
             </div>
-            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#9211;</button>
+            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#10162;</button>
         </div>
     </aside>
 
@@ -293,6 +294,23 @@
         </div>
 
         <!-- ═══ Notifications Section ═══ -->
+
+        <div class="section" id="section-guest-passes">
+            <div class="page-header"><div><h1>Guest Passes</h1><p class="subtitle">Register visitor vehicles for temporary parking</p></div></div>
+            <div class="card" style="max-width:700px; margin-bottom:16px;">
+                <div class="card-header">Create Guest Pass</div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+                    <input class="form-control" id="gp-make" placeholder="Make">
+                    <input class="form-control" id="gp-model" placeholder="Model">
+                    <input class="form-control" id="gp-color" placeholder="Color">
+                    <input class="form-control" id="gp-plate" placeholder="Plate Number">
+                    <input class="form-control" id="gp-duration" type="number" min="1" placeholder="Duration (hours)">
+                </div>
+                <button class="btn btn-primary" style="margin-top:10px;" onclick="createGuestPass()">Create Pass</button>
+            </div>
+            <div id="guest-pass-content"></div>
+        </div>
+
         <div class="section" id="section-notifications">
             <div class="page-header">
                 <div>
@@ -334,6 +352,7 @@
             if (section === 'vehicles') loadVehicles();
             if (section === 'violations') loadViolationsAndFines();
             if (section === 'notifications') loadNotifications();
+            if (section === 'guest-passes') loadGuestPasses();
         });
     });
 
@@ -645,6 +664,44 @@
         } catch (err) {
             showToast('Failed to download lease file', 'error');
         }
+    }
+
+
+    async function loadGuestPasses() {
+        try {
+            const passes = await apiCall('/api/my/guest-passes');
+            const container = document.getElementById('guest-pass-content');
+            if (!passes.length) {
+                container.innerHTML = '<div class="empty-state"><h3>No guest passes</h3><p>Create a pass to register your guest vehicle.</p></div>';
+                return;
+            }
+            container.innerHTML = `<div class="table-wrapper"><table><thead><tr><th>Vehicle</th><th>Plate</th><th>Duration</th><th>Status</th><th>Expires</th><th></th></tr></thead><tbody>${passes.map(p => `<tr><td>${p.make} ${p.model} (${p.color})</td><td><strong>${p.plate_number}</strong></td><td>${p.duration_hours}h</td><td><span class="badge ${p.status==='active'?'badge-success':'badge-warning'}">${p.status}</span></td><td>${formatDate(p.expires_at)}</td><td>${p.status==='active'?`<button class='btn btn-danger btn-sm' onclick='cancelGuestPass(${p.id})'>Cancel</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function createGuestPass() {
+        try {
+            await apiCall('/api/my/guest-passes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    make: document.getElementById('gp-make').value,
+                    model: document.getElementById('gp-model').value,
+                    color: document.getElementById('gp-color').value,
+                    plate_number: document.getElementById('gp-plate').value,
+                    duration_hours: parseInt(document.getElementById('gp-duration').value, 10),
+                })
+            });
+            showToast('Guest pass created');
+            loadGuestPasses();
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function cancelGuestPass(id) {
+        try {
+            await apiCall(`/api/my/guest-passes/${id}`, { method: 'DELETE' });
+            showToast('Guest pass cancelled');
+            loadGuestPasses();
+        } catch (err) { showToast(err.message, 'error'); }
     }
 
     // Load chat history on start

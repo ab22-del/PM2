@@ -93,6 +93,9 @@ class Property(Base):
     zip_code = Column(String, nullable=False)
     total_units = Column(Integer, default=1)
     max_vehicles_per_unit = Column(Integer, default=2)
+    max_guest_passes_per_unit = Column(Integer, default=2)
+    max_guest_pass_duration_hours = Column(Integer, default=72)
+    allow_guest_passes = Column(Boolean, default=True)
     parking_violation_fee = Column(Float, default=50.0)
     maintenance_email = Column(String, nullable=True)  # maintenance company email
     maintenance_phone = Column(String, nullable=True)
@@ -157,6 +160,25 @@ class Vehicle(Base):
     year = Column(Integer, nullable=True)
 
     tenant_profile = relationship("TenantProfile", back_populates="vehicles")
+
+
+class GuestPass(Base):
+    __tablename__ = "guest_passes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_profile_id = Column(Integer, ForeignKey("tenant_profiles.id"), nullable=False)
+    property_id = Column(Integer, ForeignKey("properties.id"), nullable=False)
+    make = Column(String, nullable=False)
+    model = Column(String, nullable=False)
+    color = Column(String, nullable=False)
+    plate_number = Column(String, nullable=False, index=True)
+    duration_hours = Column(Integer, nullable=False)
+    status = Column(String, default="active")  # active, expired, cancelled
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+
+    tenant_profile = relationship("TenantProfile")
+    property = relationship("Property")
 
 
 # ─── Maintenance Requests ────────────────────────────────────────────────────

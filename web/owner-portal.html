@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Dashboard — PropManage</title>
+    <title>Owner Dashboard — PropManager AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/web/css/style.css">
     <style>
@@ -198,7 +198,7 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <div class="logo-icon">P</div>
-            <span>PropManage</span>
+            <span>PropManager AI</span>
             <span class="badge">OWNER</span>
         </div>
         <nav class="sidebar-nav">
@@ -495,9 +495,13 @@ async function loadLandlords() {
                 <td>${formatCurrency(ll.monthly_price)}/mo</td>
                 <td>${ll.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Disabled</span>'}</td>
                 <td>
-                    <button class="btn-sm ${ll.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleLandlord(${ll.id}, ${ll.is_active})">
-                        ${ll.is_active ? 'Disable' : 'Enable'}
-                    </button>
+                    <div style='display:flex; gap:6px; align-items:center; flex-wrap:wrap;'>
+                        <button class="btn-sm ${ll.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleLandlord(${ll.id}, ${ll.is_active})">${ll.is_active ? 'Disable' : 'Enable'}</button>
+                        <select id='plan-${ll.id}' class='form-control' style='min-width:110px; padding:6px;'>
+                            ${['base','medium','managers','landlord','custom'].map(p => `<option value='${p}' ${ll.plan===p?'selected':''}>${p}</option>`).join('')}
+                        </select>
+                        <button class='btn-sm btn-primary' onclick='changePlan(${ll.id})'>Save Plan</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -521,6 +525,18 @@ async function toggleLandlord(id, isActive) {
         await apiCall(`/api/owner/landlords/${id}/status`, { method: 'PUT' });
         showToast(`Landlord ${isActive ? 'disabled' : 'enabled'} successfully`);
         loadLandlords();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function changePlan(id) {
+    try {
+        const plan = document.getElementById(`plan-${id}`).value;
+        await apiCall(`/api/owner/landlords/${id}/plan`, { method: 'PUT', body: JSON.stringify({ plan }) });
+        showToast('Plan updated and landlord notified');
+        loadLandlords();
+        loadDashboard();
     } catch (err) {
         showToast(err.message, 'error');
     }
