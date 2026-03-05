@@ -73,6 +73,9 @@ class PropertyCreate(BaseModel):
     zip_code: str
     total_units: int = 1
     max_vehicles_per_unit: int = 2
+    max_guest_passes_per_unit: int = 2
+    max_guest_pass_duration_hours: int = 72
+    allow_guest_passes: bool = True
     parking_violation_fee: float = 50.0
     maintenance_email: Optional[str] = None
     maintenance_phone: Optional[str] = None
@@ -89,6 +92,9 @@ class PropertyResponse(BaseModel):
     zip_code: str
     total_units: int
     max_vehicles_per_unit: int
+    max_guest_passes_per_unit: int
+    max_guest_pass_duration_hours: int
+    allow_guest_passes: bool
     parking_violation_fee: float
     maintenance_email: Optional[str]
     maintenance_phone: Optional[str]
@@ -180,6 +186,33 @@ class VehicleResponse(BaseModel):
 
 
 # ─── Maintenance ─────────────────────────────────────────────────────────────
+
+
+
+class GuestPassCreate(BaseModel):
+    make: str
+    model: str
+    color: str
+    plate_number: str
+    duration_hours: int
+
+
+class GuestPassResponse(BaseModel):
+    id: int
+    tenant_profile_id: int
+    property_id: int
+    make: str
+    model: str
+    color: str
+    plate_number: str
+    duration_hours: int
+    status: str
+    created_at: Optional[datetime]
+    expires_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
 
 class MaintenanceRequestCreate(BaseModel):
     description: str

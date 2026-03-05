@@ -1,5 +1,5 @@
 """
-Email Service for PropManage
+Email Service for PropManager AI
 Sends violation and fine notification emails to tenants.
 Falls back gracefully when SMTP is not configured (records notification in DB only).
 """
@@ -89,7 +89,7 @@ def send_violation_email(
     <html>
     <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #4F46E5, #7C3AED); padding: 24px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">PropManage</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">PropManager AI</h1>
             <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0;">Property Management Platform</p>
         </div>
         <div style="border: 1px solid #E5E7EB; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
@@ -104,7 +104,7 @@ def send_violation_email(
             <p>Your property manager will review this violation and determine the appropriate action. You may be subject to a fine as outlined in your lease agreement.</p>
             <p>If you have questions, please contact your property manager.</p>
             <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
-            <p style="font-size: 12px; color: #9CA3AF;">This is an automated message from PropManage. Please do not reply to this email.</p>
+            <p style="font-size: 12px; color: #9CA3AF;">This is an automated message from PropManager AI. Please do not reply to this email.</p>
         </div>
     </body>
     </html>
@@ -129,7 +129,7 @@ def send_fine_email(
     <html>
     <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #4F46E5, #7C3AED); padding: 24px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">PropManage</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">PropManager AI</h1>
             <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0;">Property Management Platform</p>
         </div>
         <div style="border: 1px solid #E5E7EB; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
@@ -145,7 +145,7 @@ def send_fine_email(
             </div>
             <p>Please contact your property manager to arrange payment or if you wish to dispute this fine.</p>
             <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
-            <p style="font-size: 12px; color: #9CA3AF;">This is an automated message from PropManage. Please do not reply to this email.</p>
+            <p style="font-size: 12px; color: #9CA3AF;">This is an automated message from PropManager AI. Please do not reply to this email.</p>
         </div>
     </body>
     </html>

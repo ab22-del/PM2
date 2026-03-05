@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — PropManage</title>
+    <title>Dashboard — PropManager AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/web/css/style.css">
     <style>
@@ -168,8 +168,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <div class="logo-icon">P</div>
-            <span>PropManage</span>
+            <div class="logo-icon">PA</div>
+            <span>PropManager AI</span>
         </div>
         <nav class="sidebar-nav">
             <div class="section-label">Main</div>
@@ -182,6 +182,7 @@
             <a href="#" data-section="parking"><span class="icon">&#128663;</span> Parking</a>
             <a href="#" data-section="violations"><span class="icon">&#9888;</span> Violations</a>
             <a href="#" data-section="notifications"><span class="icon">&#128276;</span> Notifications</a>
+            <a href="#" data-section="settings"><span class="icon">&#9881;</span> Settings</a>
 
             <div class="section-label">Account</div>
             <a href="#" data-section="billing"><span class="icon">&#128179;</span> Plans & Billing</a>
@@ -192,7 +193,7 @@
                 <div class="name" id="user-name">Landlord</div>
                 <div class="role">Property Manager</div>
             </div>
-            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#9211;</button>
+            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#10162;</button>
         </div>
     </aside>
 
@@ -347,6 +348,12 @@
                     <p>Notifications will appear as Stacy handles tenant requests.</p>
                 </div>
             </div>
+        </div>
+
+
+        <div class="section" id="section-settings">
+            <div class="page-header"><div><h1>Property Settings</h1><p class="subtitle">Control guest passes, vehicles, and operational limits</p></div></div>
+            <div id="settings-content"></div>
         </div>
 
         <!-- ═══ Billing Section ═══ -->
@@ -653,6 +660,7 @@
             if (section === 'parking') loadParking();
             if (section === 'violations') loadViolations();
             if (section === 'notifications') loadNotifications();
+            if (section === 'settings') loadSettings();
             if (section === 'billing') loadBilling();
         });
     });
@@ -1300,19 +1308,64 @@
                 return;
             }
 
-            container.innerHTML = notifs.map(n => `
-                <div class="card" style="margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="badge ${n.type === 'sms' ? 'badge-info' : 'badge-primary'}">${n.type.toUpperCase()}</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 14px;">${n.subject || 'Notification'}</div>
-                            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">${n.message}</div>
-                        </div>
-                        <div style="font-size: 12px; color: var(--gray-400);">${formatDate(n.created_at)}</div>
-                    </div>
-                </div>
-            `).join('');
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Type</th><th>Subject</th><th>Recipient</th><th>Message</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody>
+                            ${notifs.map(n => `
+                                <tr>
+                                    <td><span class="badge ${n.type === 'sms' ? 'badge-info' : 'badge-primary'}">${n.type.toUpperCase()}</span></td>
+                                    <td>${n.subject || 'Notification'}</td>
+                                    <td>${n.recipient_phone || n.recipient_email || 'System'}</td>
+                                    <td style="max-width: 420px; white-space: normal;">${n.message}</td>
+                                    <td><span class="badge ${n.status === 'sent' ? 'badge-success' : 'badge-warning'}">${(n.status || 'sent').toUpperCase()}</span></td>
+                                    <td>${formatDate(n.created_at)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
         } catch (err) { console.error(err); }
+    }
+
+    
+
+    async function loadSettings() {
+        try {
+            const properties = await apiCall('/api/properties');
+            const container = document.getElementById('settings-content');
+            if (!properties.length) {
+                container.innerHTML = '<div class="empty-state"><h3>No properties found</h3><p>Add a property first to configure settings.</p></div>';
+                return;
+            }
+            const p = properties[0];
+            container.innerHTML = `
+                <div class="card" style="max-width:700px;">
+                    <div class="card-header">${p.name} - Rules & Limits</div>
+                    <div class="form-group"><label>Max Registered Vehicles / Unit</label><input id="set-max-vehicles" class="form-control" type="number" min="1" value="${p.max_vehicles_per_unit || 2}" /></div>
+                    <div class="form-group"><label>Max Active Guest Passes / Unit</label><input id="set-max-guest" class="form-control" type="number" min="0" value="${p.max_guest_passes_per_unit || 2}" /></div>
+                    <div class="form-group"><label>Max Guest Pass Duration (Hours)</label><input id="set-max-duration" class="form-control" type="number" min="1" value="${p.max_guest_pass_duration_hours || 72}" /></div>
+                    <div class="form-group"><label><input id="set-allow-guest" type="checkbox" ${p.allow_guest_passes ? 'checked' : ''} /> Allow Guest Passes</label></div>
+                    <button class="btn btn-primary" onclick="saveSettings(${p.id})">Save Settings</button>
+                </div>`;
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function saveSettings(propertyId) {
+        try {
+            await apiCall(`/api/properties/${propertyId}/settings`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    max_vehicles_per_unit: parseInt(document.getElementById('set-max-vehicles').value, 10),
+                    max_guest_passes_per_unit: parseInt(document.getElementById('set-max-guest').value, 10),
+                    max_guest_pass_duration_hours: parseInt(document.getElementById('set-max-duration').value, 10),
+                    allow_guest_passes: document.getElementById('set-allow-guest').checked
+                })
+            });
+            showToast('Settings saved');
+            loadProperties();
+        } catch (err) { showToast(err.message, 'error'); }
     }
 
     // ─── Load Billing ────────────────────

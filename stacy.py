@@ -19,7 +19,7 @@ from models import (
     User, TenantProfile, Vehicle, Property, Unit, ChatMessage,
     MaintenanceRequest, ParkingComplaint, Notification, Violation
 )
-from email_service import send_violation_email
+from email_service import send_violation_email, send_and_record_email
 
 
 class StacyAssistant:
@@ -121,6 +121,11 @@ class StacyAssistant:
         # Yes/No responses
         if msg.strip().lower() in ["yes", "yeah", "yep", "sure", "ok", "okay", "y", "no", "nah", "nope", "n"]:
             return "confirmation"
+
+        # Maintenance follow-up details to avoid looping
+        last_intent = self.get_last_intent()
+        if last_intent == "maintenance" and len(msg) <= 80:
+            return "maintenance_followup"
 
         # Maintenance related
         for category, keywords in self.MAINTENANCE_CATEGORIES.items():
@@ -480,6 +485,23 @@ class StacyAssistant:
 
             self.save_message("assistant", response, "maintenance")
 
+        elif intent == "maintenance_followup":
+            recent = self.db.query(MaintenanceRequest).filter(
+                MaintenanceRequest.tenant_profile_id == self.tenant_profile.id
+            ).order_by(MaintenanceRequest.created_at.desc()).first() if self.tenant_profile else None
+
+            if recent:
+                recent.notes = ((recent.notes or "") + "\nFollow-up details: " + message).strip()
+                self.db.commit()
+                response = (
+                    f"Thanks — I added that to maintenance ticket #{recent.id}. "
+                    f"We'll use these details to prioritize scheduling and keep you updated."
+                )
+            else:
+                response = "Thanks for the details. I can create a new maintenance request if you tell me the issue."
+
+            self.save_message("assistant", response, "maintenance")
+
         elif intent == "lease":
             response = (
                 f"I'd be happy to help with your lease question, {self.user.first_name}! "
@@ -717,11 +739,10 @@ class StacyAssistant:
                 })
 
             response = (
-                f"Got it! I found that plate number **{plate}** — it belongs to "
-                f"**{offender_name}** in Unit {offender_unit}.\n\n"
+                f"Got it — I found that plate number **{plate}** registered in your property.\n\n"
                 f"Here's what I've done:\n"
-                f"- Sent {offender_user.first_name} a notification to move their vehicle immediately\n"
-                f"- Emailed a violation notice to {offender_user.first_name}\n"
+                f"- Sent the tenant a notification to move their vehicle immediately\n"
+                f"- Emailed a violation notice to the tenant\n"
                 f"- Notified your property manager about the complaint\n"
                 f"- Created a violation record for landlord review\n\n"
                 f"Your property manager will review the violation and decide whether to issue a fine. "
@@ -835,15 +856,40 @@ class StacyLandlordAssistant:
                 Violation.status == "pending"
             ).count()
 
-        response = (
-            f"Hi {self.user.first_name}! Here's your property overview:\n\n"
-            f"- **Properties:** {len(properties)}\n"
-            f"- **Total Tenants:** {total_tenants}\n"
-            f"- **Open Maintenance Requests:** {open_maintenance}\n"
-            f"- **Open Parking Complaints:** {open_parking}\n"
-            f"- **Pending Violations:** {pending_violations}\n\n"
-            f"What would you like to do?"
-        )
+        if "find me" in msg and any(k in msg for k in ["plumber", "electrician", "hvac", "contractor"]):
+            trade = "plumber" if "plumber" in msg else "vendor"
+            area = message.split("in", 1)[1].strip() if " in " in msg else "your area"
+            response = (
+                f"Absolutely — here are quick options to find a {trade} in {area}:\n"
+                f"- Google Maps search: https://www.google.com/maps/search/{trade.replace(' ', '+')}+in+{area.replace(' ', '+')}\n"
+                f"- Yelp search: https://www.yelp.com/search?find_desc={trade.replace(' ', '+')}&find_loc={area.replace(' ', '+')}\n"
+                f"- Angi: https://www.angi.com\n\n"
+                f"Share the company you choose and I can draft/send a scheduling email with your property details."
+            )
+        elif "schedule" in msg and any(k in msg for k in ["repair", "maintenance", "asap", "contact them"]):
+            to_email = properties[0].maintenance_email if properties else None
+            if to_email:
+                send_and_record_email(
+                    db=self.db,
+                    user_id=self.user.id,
+                    property_id=properties[0].id,
+                    to_email=to_email,
+                    subject="ASAP Repair Scheduling Request",
+                    html_body=f"Please schedule an ASAP repair for property {properties[0].name}. Requested by landlord {self.user.first_name} {self.user.last_name}."
+                )
+                response = f"Done — I sent a scheduling request to {to_email} for ASAP repair coordination."
+            else:
+                response = "I can schedule it, but I need a maintenance vendor email in your property settings first."
+        else:
+            response = (
+                f"Hi {self.user.first_name}! Here's your property overview:\n\n"
+                f"- **Properties:** {len(properties)}\n"
+                f"- **Total Tenants:** {total_tenants}\n"
+                f"- **Open Maintenance Requests:** {open_maintenance}\n"
+                f"- **Open Parking Complaints:** {open_parking}\n"
+                f"- **Pending Violations:** {pending_violations}\n\n"
+                f"You can also ask me things like: 'find me a plumber in Boca Raton' or 'schedule repair ASAP'."
+            )
 
         resp_msg = ChatMessage(
             user_id=self.user.id,
