@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Login — PropManage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/style.css">
+    <style>
+        body { min-height: 100vh; display: flex; background: linear-gradient(135deg, #0F172A, #1E1B4B); }
+        .login-page { display: flex; width: 100%; min-height: 100vh; }
+        .login-brand {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: 60px; color: white;
+        }
+        .login-brand h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+        .login-brand h1 span { color: #34D399; }
+        .login-brand p { font-size: 18px; color: #94A3B8; line-height: 1.7; max-width: 480px; }
+        .login-brand .features-list { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; }
+        .login-brand .features-list div {
+            display: flex; align-items: center; gap: 12px; color: #CBD5E1; font-size: 15px;
+        }
+        .login-brand .features-list .icon {
+            width: 36px; height: 36px; border-radius: 8px; background: rgba(52,211,153,0.2);
+            display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+        }
+        .login-form-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px;
+        }
+        .login-card {
+            background: white; border-radius: 20px; padding: 48px;
+            width: 100%; max-width: 440px; box-shadow: var(--shadow-xl);
+        }
+        .login-card .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+        .login-card .logo .logo-icon {
+            width: 40px; height: 40px; background: linear-gradient(135deg, #10B981, #34D399); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 800;
+        }
+        .login-card .logo span {
+            font-size: 22px; font-weight: 800;
+            background: linear-gradient(135deg, #10B981, #0EA5E9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .login-card h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        .login-card .subtitle { font-size: 15px; color: var(--gray-500); margin-bottom: 32px; }
+        .error-msg { background: #FEE2E2; color: #991B1B; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
+        .alt-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray-500); }
+        .alt-link a { color: var(--primary); font-weight: 600; }
+        @media (max-width: 768px) { .login-brand { display: none; } .login-card { padding: 32px; } }
+    </style>
+</head>
+<body>
+<div class="login-page">
+    <div class="login-brand">
+        <a href="/web/index.html" style="color: white; margin-bottom: 40px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; opacity: 0.7;">&#8592; Back to Home</a>
+        <h1>Welcome,<br><span>Tenant</span></h1>
+        <p>Access your portal, chat with Stacy for instant help, report issues, and manage your lease.</p>
+        <div class="features-list">
+            <div><div class="icon">&#129302;</div> Chat with Stacy for instant help</div>
+            <div><div class="icon">&#128295;</div> Report maintenance issues</div>
+            <div><div class="icon">&#128663;</div> Report parking violations</div>
+            <div><div class="icon">&#128203;</div> View your lease & profile</div>
+        </div>
+    </div>
+    <div class="login-form-wrapper">
+        <div class="login-card">
+            <div class="logo">
+                <div class="logo-icon">P</div>
+                <span>PropManage</span>
+            </div>
+            <h2>Tenant Login</h2>
+            <p class="subtitle">Sign in to access your tenant portal</p>
+            <div class="error-msg" id="error-msg"></div>
+            <form onsubmit="handleTenantLogin(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block" id="login-btn" style="padding: 14px; font-size: 16px;">
+                    Sign In
+                </button>
+            </form>
+            <div class="alt-link" style="margin-top: 24px;">
+                Are you a landlord? <a href="/web/landlord-login.html">Landlord Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/web/js/app.js"></script>
+<script>
+async function handleTenantLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const errorEl = document.getElementById('error-msg');
+    errorEl.style.display = 'none';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+    try {
+        const data = await apiCall('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (data.role !== 'tenant') {
+            errorEl.textContent = 'This login is for tenants only. Please use the landlord login.';
+            errorEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+            return;
+        }
+
+        setAuth(data);
+        window.location.href = '/web/tenant-portal.html';
+    } catch (err) {
+        errorEl.textContent = err.message || 'Invalid email or password';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+}
+
+if (isLoggedIn()) {
+    const user = getUser();
+    if (user && user.role === 'tenant') {
+        window.location.href = '/web/tenant-portal.html';
+    }
+}
+</script>
+</body>
+</html>

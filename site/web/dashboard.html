@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Dashboard</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    /* Sidebar property picker */
+    .prop-switcher select { border-radius: var(--r-sm); font-size: 13px; }
+
+    /* Form row spacing fix */
+    form label:not(:first-child) { margin-top: 14px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width:640px){ .form-grid { grid-template-columns: 1fr; } }
+
+    /* Submit row */
+    .form-submit { margin-top: 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Approval buttons */
+    .approve-btn { background: #E8F9EE; color: #1A7A3A; border: none; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .approve-btn:hover { background: #d1f4e0; }
+    .escalate-btn { background: var(--apple-gray-1); color: var(--text-2); border: none; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .escalate-btn:hover { background: var(--apple-gray-2); }
+
+    /* No-plan screen */
+    #noPlanGate { max-width: 960px; margin: 0 auto; text-align: center; }
+    #noPlanGate h1 { margin-bottom: 10px; }
+    #noPlanGate p { color: var(--text-3); margin-bottom: 36px; }
+
+    /* SMS key hint */
+    .field-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    /* Table action btn */
+    .tbl-btn { background: var(--apple-gray-1); color: var(--text-2); border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+    .tbl-btn:hover { background: var(--apple-gray-2); }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="./index.html">Employee<span style="color:var(--apple-blue);">AI</span></a>
+      <div class="nav-actions">
+        <span id="userBadge" class="badge"></span>
+        <button id="logoutBtn" class="btn">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container section">
+
+    <!-- NO PLAN GATE -->
+    <section id="noPlanGate" class="hidden">
+      <div style="padding:48px 0 28px;">
+        <div style="font-size:52px;margin-bottom:16px;">🏢</div>
+        <h1>Choose a plan to get started</h1>
+        <p>Your account is ready. Select a plan to unlock your workspace and activate Stacy.</p>
+      </div>
+      <div id="planOnlyGrid" class="plans-grid"></div>
+    </section>
+
+    <!-- APP SHELL -->
+    <div id="appShell" class="app-layout hidden">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-section-label">Navigation</div>
+        <button class="tab-btn active" data-tab="operations"><span class="tab-icon">⚡</span>Operations</button>
+        <button class="tab-btn" data-tab="billing"><span class="tab-icon">💳</span>Plan & Billing</button>
+        <button class="tab-btn" data-tab="tenants"><span class="tab-icon">👥</span>Tenants</button>
+        <button class="tab-btn" data-tab="vehicles"><span class="tab-icon">🚗</span>Vehicles</button>
+        <button class="tab-btn" data-tab="units"><span class="tab-icon">🏢</span>Units</button>
+        <button class="tab-btn" data-tab="advanced"><span class="tab-icon">⚙️</span>Automation</button>
+        <button class="tab-btn" data-tab="alerts"><span class="tab-icon">🔔</span>Alerts & SMS</button>
+
+        <hr class="sidebar-divider" />
+
+        <div class="prop-switcher">
+          <div class="sidebar-section-label" style="padding:0 0 4px;">Active Property</div>
+          <select id="activePropertySelect"></select>
+          <p class="prop-hint" id="activePropertyHint">Add a property to begin.</p>
+        </div>
+      </aside>
+
+      <!-- CONTENT PANELS -->
+      <div>
+
+        <!-- ── OPERATIONS ── -->
+        <div id="tab-operations" class="tab-panel active">
+          <div class="page-head">
+            <h1>Operations</h1>
+            <p>Overview, property setup, Stacy configuration, and email triage.</p>
+          </div>
+
+          <!-- KPIs -->
+          <div class="kpi-grid">
+            <div class="kpi-tile card-blue">
+              <div class="k-icon">🏠</div>
+              <div class="k-num" id="kpiProperties">0</div>
+              <div class="k-label">Properties</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="k-icon">👥</div>
+              <div class="k-num" id="kpiTenants">0</div>
+              <div class="k-label">Tenants</div>
+            </div>
+            <div class="kpi-tile card-amber">
+              <div class="k-icon">📋</div>
+              <div class="k-num" id="kpiIssues">0</div>
+              <div class="k-label">Open Issues</div>
+            </div>
+            <div class="kpi-tile card-red">
+              <div class="k-icon">⏳</div>
+              <div class="k-num" id="kpiPending">0</div>
+              <div class="k-label">Awaiting Approval</div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <!-- Add Property -->
+            <div class="card card-sm">
+              <h4>Add Property</h4>
+              <form id="propertyForm" style="margin-top:14px;">
+                <label>Property name
+                  <input class="input" name="name" required placeholder="Sunset Apartments" />
+                </label>
+                <label>City, State
+                  <input class="input" name="cityState" required placeholder="Miami, FL" />
+                </label>
+                <label>Max vehicles per unit
+                  <input class="input" name="maxVehiclesPerUnit" type="number" min="1" value="2" required />
+                </label>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Save property</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Stacy Config -->
+            <div class="card card-sm">
+              <h4>Stacy Configuration <span style="font-size:11px;color:var(--text-3);font-weight:400;">(per property)</span></h4>
+              <form id="stacyConfigForm" style="margin-top:14px;">
+                <div class="form-grid">
+                  <label>Operations email
+                    <input class="input" type="email" name="operationsEmail" placeholder="ops@company.com" />
+                  </label>
+                  <label>Email password
+                    <input class="input" type="password" name="operationsPassword" />
+                  </label>
+                </div>
+                <div class="form-grid">
+                  <label>Landlord alert phone
+                    <input class="input" name="landlordPhone" placeholder="+15550001234" />
+                  </label>
+                  <label>Maintenance vendor email
+                    <input class="input" type="email" name="maintenanceEmail" placeholder="vendor@repairs.com" />
+                  </label>
+                </div>
+                <label>SMS mode
+                  <select name="smsMode">
+                    <option value="textbelt">Live — Textbelt API</option>
+                    <option value="demo">Demo — log only</option>
+                  </select>
+                </label>
+                <label>Textbelt API key
+                  <input class="input" name="textbeltKey" placeholder="Leave blank to use 1 free SMS/day test key" />
+                  <span class="field-hint">Get a paid key at textbelt.com for unlimited sends.</span>
+                </label>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Save config</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Email Analyzer -->
+          <div class="card card-sm" style="margin-top:16px;">
+            <h4>Email Analyzer</h4>
+            <p style="font-size:13px;color:var(--text-3);margin:6px 0 14px;">Paste an incoming tenant email and Stacy will triage it, create a workflow, and send the right SMS.</p>
+            <form id="emailIngestForm">
+              <div class="form-grid">
+                <label>From email
+                  <input class="input" type="email" name="fromEmail" required placeholder="tenant@email.com" />
+                </label>
+                <label>Unit hint (optional)
+                  <input class="input" name="unitHint" placeholder="2A" />
+                </label>
+              </div>
+              <label>Subject
+                <input class="input" name="subject" required placeholder="AC not cooling" />
+              </label>
+              <label>Message body
+                <textarea name="body" required placeholder="Paste the full email body here..."></textarea>
+              </label>
+              <div class="form-submit">
+                <button class="btn primary" type="submit">Analyze with Stacy →</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Workflow queue -->
+          <div class="card card-sm" style="margin-top:16px;">
+            <div class="section-head">
+              <h4>Workflow Queue</h4>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr><th>Type</th><th>From / Message</th><th>Status</th><th>Approval</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="issuesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── BILLING ── -->
+        <div id="tab-billing" class="tab-panel">
+          <div class="page-head">
+            <h1>Plan & Billing</h1>
+            <p>Manage your subscription and feature limits.</p>
+          </div>
+          <div class="two-col" style="margin-bottom:18px;">
+            <div class="card card-sm">
+              <h4>Current Plan</h4>
+              <p id="planSummary" style="font-size:13px;color:var(--text-3);margin-top:8px;"></p>
+            </div>
+            <div class="card card-sm">
+              <h4>Change Plan</h4>
+              <form id="planForm" style="margin-top:10px;">
+                <label>Select plan
+                  <select id="planSelect" name="planName"></select>
+                </label>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Apply</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div id="billingPlanGrid" class="plans-grid"></div>
+        </div>
+
+        <!-- ── TENANTS ── -->
+        <div id="tab-tenants" class="tab-panel">
+          <div class="page-head">
+            <h1>Tenants</h1>
+            <p>Add and manage tenants. Generate invite links for portal access.</p>
+          </div>
+          <div class="two-col">
+            <div class="card card-sm">
+              <h4>Add Tenant</h4>
+              <form id="tenantForm" style="margin-top:14px;">
+                <label>Unit
+                  <select name="unitId" id="tenantUnitId" required></select>
+                </label>
+                <label>Full name
+                  <input class="input" name="fullName" required placeholder="Jane Smith" />
+                </label>
+                <div class="form-grid">
+                  <label>Date of birth
+                    <input class="input" type="date" name="dob" />
+                  </label>
+                  <label>Phone
+                    <input class="input" name="phone" placeholder="+15550001234" />
+                  </label>
+                </div>
+                <label>Email
+                  <input class="input" type="email" name="email" required placeholder="jane@email.com" />
+                </label>
+                <label>Lease PDF (optional)
+                  <input class="input" type="file" accept="application/pdf" name="leaseFile" />
+                </label>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Add tenant</button>
+                </div>
+              </form>
+            </div>
+            <div class="card card-sm">
+              <h4>Tenant Roster</h4>
+              <div class="table-wrap" style="margin-top:14px;">
+                <table class="table">
+                  <thead><tr><th>Name</th><th>Unit</th><th>Contact</th><th>Lease</th><th>Invite</th><th></th></tr></thead>
+                  <tbody id="tenantsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VEHICLES ── -->
+        <div id="tab-vehicles" class="tab-panel">
+          <div class="page-head">
+            <h1>Vehicles</h1>
+            <p>Register vehicles for plate-to-tenant lookup during parking enforcement.</p>
+          </div>
+          <div class="two-col">
+            <div class="card card-sm">
+              <h4>Register Vehicle</h4>
+              <form id="vehicleForm" style="margin-top:14px;">
+                <label>Owner (tenant)
+                  <select name="tenantId" id="vehicleTenantId" required></select>
+                </label>
+                <label>License plate
+                  <input class="input" name="plate" required placeholder="ABC 1234" />
+                </label>
+                <div class="form-grid">
+                  <label>Make
+                    <input class="input" name="make" required placeholder="Toyota" />
+                  </label>
+                  <label>Model
+                    <input class="input" name="model" required placeholder="Camry" />
+                  </label>
+                </div>
+                <div class="form-grid">
+                  <label>Color
+                    <input class="input" name="color" required placeholder="Silver" />
+                  </label>
+                  <label>Assigned spot
+                    <input class="input" name="assignedSpot" placeholder="A-12" />
+                  </label>
+                </div>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Register</button>
+                  <span class="error" id="vehicleError"></span>
+                </div>
+              </form>
+            </div>
+            <div class="card card-sm">
+              <h4>Vehicle Registry</h4>
+              <div class="table-wrap" style="margin-top:14px;">
+                <table class="table">
+                  <thead><tr><th>Plate</th><th>Vehicle</th><th>Color</th><th>Owner</th><th>Spot</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="vehiclesBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── UNITS ── -->
+        <div id="tab-units" class="tab-panel">
+          <div class="page-head">
+            <h1>Units</h1>
+            <p>Add units and configure parking limits per property.</p>
+          </div>
+          <div class="two-col">
+            <div class="card card-sm">
+              <h4>Add Unit</h4>
+              <form id="unitForm" style="margin-top:14px;">
+                <label>Property
+                  <select name="propertyId" id="unitPropertyId" required></select>
+                </label>
+                <label>Unit label
+                  <input class="input" name="label" required placeholder="2A" />
+                </label>
+                <div class="form-grid">
+                  <label>Parking spots
+                    <input class="input" name="parkingSpots" type="number" min="0" value="1" />
+                  </label>
+                  <label>Vehicle max override
+                    <input class="input" name="vehicleMaxOverride" type="number" min="1" placeholder="Use property default" />
+                  </label>
+                </div>
+                <div class="form-submit">
+                  <button class="btn primary" type="submit">Add unit</button>
+                </div>
+              </form>
+            </div>
+            <div class="card card-sm">
+              <h4>All Units</h4>
+              <div class="table-wrap" style="margin-top:14px;">
+                <table class="table">
+                  <thead><tr><th>Property</th><th>Unit</th><th>Tenants</th><th>Spots</th><th>Max Veh.</th><th></th></tr></thead>
+                  <tbody id="unitsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── AUTOMATION ── -->
+        <div id="tab-advanced" class="tab-panel">
+          <div class="page-head">
+            <h1>Automation</h1>
+            <p>Parking violations, lease workflows, and reporting.</p>
+          </div>
+          <div class="two-col">
+            <div class="card card-sm">
+              <h4>Parking Violation</h4>
+              <p style="font-size:13px;color:var(--text-3);margin:6px 0 14px;">Create a formal violation workflow for manager approval.</p>
+              <form id="violationForm">
+                <label>Unit number
+                  <input class="input" name="unit" required placeholder="2A" />
+                </label>
+                <label>Violation notes
+                  <textarea name="notes" required placeholder="Parked without permit in visitor spot..."></textarea>
+                </label>
+                <label>Fine amount ($)
+                  <input class="input" type="number" name="amount" min="0" value="50" />
+                </label>
+                <div class="form-submit">
+                  <button class="btn" type="submit">Create workflow</button>
+                </div>
+              </form>
+            </div>
+            <div class="card card-sm">
+              <h4>Lease Workflow</h4>
+              <p style="font-size:13px;color:var(--text-3);margin:6px 0 14px;">Trigger a lease automation for a specific tenant.</p>
+              <form id="leaseWorkflowForm">
+                <label>Tenant email
+                  <input class="input" type="email" name="email" required placeholder="tenant@email.com" />
+                </label>
+                <label>Action
+                  <select name="action">
+                    <option>Lease Renewal Reminder</option>
+                    <option>Move-in Checklist</option>
+                    <option>Move-out Checklist</option>
+                    <option>Late Payment Notice</option>
+                  </select>
+                </label>
+                <div class="form-submit">
+                  <button class="btn" type="submit">Queue workflow</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="card card-sm" style="margin-top:16px;">
+            <h4>Reporting Snapshot</h4>
+            <p id="reportingSnapshot" style="font-size:13px;color:var(--text-3);margin-top:8px;font-family:monospace;"></p>
+          </div>
+        </div>
+
+        <!-- ── ALERTS ── -->
+        <div id="tab-alerts" class="tab-panel">
+          <div class="page-head">
+            <h1>Alerts & SMS Log</h1>
+            <p>Real-time activity stream and message delivery tracking.</p>
+          </div>
+          <div class="two-col">
+            <div class="card card-sm">
+              <h4>Alert Stream</h4>
+              <div class="table-wrap" style="margin-top:14px;">
+                <table class="table">
+                  <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Status</th></tr></thead>
+                  <tbody id="alertsBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card card-sm">
+              <h4>SMS Delivery Log</h4>
+              <div class="table-wrap" style="margin-top:14px;">
+                <table class="table">
+                  <thead><tr><th>Time</th><th>Phone</th><th>Message</th><th>Delivery</th></tr></thead>
+                  <tbody id="smsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content panels -->
+    </div><!-- /app layout -->
+  </main>
+
+  <!-- STACY BUBBLE -->
+  <button id="stacyBubbleBtn" class="stacy-bubble" type="button">
+    <span class="bubble-dot"></span> Ask Stacy
+  </button>
+
+  <div id="stacyPanel" class="stacy-panel hidden">
+    <div class="stacy-header">
+      <div class="stacy-avatar">🤖</div>
+      <div class="stacy-info">
+        <div class="stacy-name">Stacy</div>
+        <div class="stacy-status">Property Assistant · Online</div>
+      </div>
+    </div>
+    <div id="stacyMessages" class="stacy-messages"></div>
+    <form id="stacyChatForm" class="stacy-form">
+      <input id="stacyInput" class="input" placeholder="Plate lookup, tenant search, parking…" required />
+      <button class="btn primary" type="submit">↑</button>
+    </form>
+  </div>
+
+  <script src="./js/plans.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Owner</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    body { background: #F5F5F7; }
+    .nav { background: rgba(29,29,31,0.92); backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+    .nav .brand { color: #fff; background: none; -webkit-text-fill-color: #fff; }
+    .nav .badge { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border-color: transparent; }
+    .nav .btn { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.15); }
+    .nav .btn:hover { background: rgba(255,255,255,0.18); }
+
+    .owner-hero { background: var(--apple-black); padding: 40px 0 36px; border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+    .owner-hero h1 { color: #fff; font-size: clamp(24px, 3.5vw, 36px); }
+    .owner-hero p  { color: rgba(255,255,255,0.5); font-size: 15px; margin-top: 4px; }
+
+    .kpi-tile { border-radius: var(--r-lg); padding: 20px 22px; }
+    .kpi-tile .k-num { color: var(--apple-black); }
+
+    form label { margin-top: 14px; }
+    form label:first-child { margin-top: 0; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width:640px){ .form-grid { grid-template-columns: 1fr; } }
+    .form-submit { margin-top: 16px; }
+
+    .owner-btn { background: var(--apple-black); color: #fff; border: none; padding: 10px 22px; border-radius: 980px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .owner-btn:hover { background: #2D2D2F; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="./index.html">Employee<span style="color:var(--apple-blue);">AI</span></a>
+      <div class="nav-actions">
+        <span id="ownerBadge" class="badge"></span>
+        <a href="./dashboard.html" class="btn">Manager view</a>
+        <button id="logoutBtn" class="btn">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- OWNER HERO -->
+  <div class="owner-hero">
+    <div class="container">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:6px;">OWNER ACCESS</div>
+      <h1>Command Center</h1>
+      <p>Full visibility across landlord accounts, properties, and revenue.</p>
+    </div>
+  </div>
+
+  <main class="container section">
+
+    <!-- KPIs -->
+    <div class="kpi-grid" style="margin-bottom:24px;">
+      <div class="kpi-tile" style="background:#fff;box-shadow:var(--shadow-sm);">
+        <div class="k-icon">👥</div>
+        <div class="k-num" id="kpiUsers">0</div>
+        <div class="k-label">Landlords</div>
+      </div>
+      <div class="kpi-tile" style="background:#fff;box-shadow:var(--shadow-sm);">
+        <div class="k-icon">🏠</div>
+        <div class="k-num" id="kpiProperties">0</div>
+        <div class="k-label">Properties</div>
+      </div>
+      <div class="kpi-tile" style="background:#E8F9EE;box-shadow:var(--shadow-sm);">
+        <div class="k-icon">💰</div>
+        <div class="k-num" id="kpiMrr">$0</div>
+        <div class="k-label">Monthly Recurring</div>
+      </div>
+      <div class="kpi-tile" style="background:#fff;box-shadow:var(--shadow-sm);">
+        <div class="k-icon">🏦</div>
+        <div class="k-num" id="kpiBalance">$0</div>
+        <div class="k-label">Available Balance</div>
+      </div>
+    </div>
+
+    <!-- Plan Management + Payouts -->
+    <div class="two-col" style="margin-bottom:18px;">
+      <div class="card card-sm">
+        <h4 style="margin-bottom:14px;">Plan Management</h4>
+        <label>Search landlord
+          <input id="landlordSearch" class="input" placeholder="Name or email…" />
+        </label>
+        <form id="assignPlanForm" style="margin-top:14px;">
+          <label>Landlord account
+            <select name="userEmail" id="planUserEmail" required></select>
+          </label>
+          <label>Plan
+            <select name="plan" id="planSelect" required></select>
+          </label>
+          <div class="form-grid">
+            <label>Monthly price ($)
+              <input class="input" name="price" type="number" min="0" required placeholder="349" />
+            </label>
+            <label>Setup fee ($)
+              <input class="input" name="setupFee" type="number" min="0" required placeholder="59" />
+            </label>
+          </div>
+          <div class="form-submit">
+            <button class="owner-btn" type="submit">Assign plan</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card card-sm">
+        <h4 style="margin-bottom:14px;">Payouts & Balances</h4>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">Record outgoing payments and track available balance.</p>
+        <form id="payoutForm">
+          <label>Description
+            <input class="input" name="description" required placeholder="Vendor payment — maintenance" />
+          </label>
+          <label>Amount ($)
+            <input class="input" name="amount" type="number" min="1" required placeholder="500" />
+          </label>
+          <div class="form-submit">
+            <button class="btn" type="submit">Record payout</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tables -->
+    <div class="two-col">
+      <div class="card card-sm">
+        <h4 style="margin-bottom:14px;">Landlord Accounts</h4>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Monthly</th><th>Setup</th></tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card card-sm">
+        <h4 style="margin-bottom:14px;">Payout Ledger</h4>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+            <tbody id="payoutsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="./js/plans.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/owner.js"></script>
+</body>
+</html>

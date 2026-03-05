@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — PropManage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/style.css">
+    <style>
+        body { background: #F1F5F9; }
+
+        /* ─── Sidebar ──────────────────────── */
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px; background: var(--darker); color: white;
+            display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 50;
+        }
+        .sidebar-logo {
+            padding: 24px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .sidebar-logo .logo-icon {
+            width: 36px; height: 36px; background: var(--gradient); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;
+        }
+        .sidebar-logo span { font-size: 20px; font-weight: 800; }
+        .sidebar-nav { padding: 16px 12px; flex: 1; }
+        .sidebar-nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 10px; color: #94A3B8;
+            font-size: 14px; font-weight: 500; transition: all 0.2s; margin-bottom: 4px;
+        }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: white; }
+        .sidebar-nav a.active { background: rgba(79,70,229,0.2); color: #818CF8; font-weight: 600; }
+        .sidebar-nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-nav .section-label {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #475569; padding: 20px 16px 8px; font-weight: 600;
+        }
+        .sidebar-user {
+            padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 36px; height: 36px; border-radius: 10px; background: var(--gradient);
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+        }
+        .sidebar-user .info { flex: 1; }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 12px; color: #64748B; }
+        .sidebar-user .logout-btn {
+            background: none; border: none; color: #64748B; cursor: pointer; font-size: 16px;
+            padding: 4px; transition: color 0.2s;
+        }
+        .sidebar-user .logout-btn:hover { color: #EF4444; }
+
+        /* ─── Main Content ─────────────────── */
+        .main-content { flex: 1; margin-left: 260px; padding: 32px; }
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 28px; font-weight: 800; }
+        .page-header .subtitle { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+
+        /* ─── Dashboard Stats ──────────────── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white; border-radius: var(--radius); padding: 24px;
+            box-shadow: var(--shadow-sm); transition: all 0.3s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px;
+        }
+        .stat-card .stat-icon.blue { background: #EEF2FF; }
+        .stat-card .stat-icon.green { background: #D1FAE5; }
+        .stat-card .stat-icon.orange { background: #FEF3C7; }
+        .stat-card .stat-icon.red { background: #FEE2E2; }
+        .stat-card .stat-value { font-size: 32px; font-weight: 800; color: var(--dark); }
+        .stat-card .stat-label { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+
+        /* ─── Panels ───────────────────────── */
+        .panel {
+            background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm);
+            margin-bottom: 24px; overflow: hidden;
+        }
+        .panel-header {
+            padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .panel-header h3 { font-size: 18px; font-weight: 700; }
+        .panel-body { padding: 24px; }
+        .panel-body.no-pad { padding: 0; }
+
+        /* ─── Section visibility ───────────── */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ─── Property Cards ───────────────── */
+        .property-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
+        }
+        .property-card {
+            background: white; border: 2px solid var(--gray-100); border-radius: var(--radius);
+            padding: 24px; transition: all 0.3s; cursor: pointer;
+        }
+        .property-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow); }
+        .property-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .property-card .address { font-size: 14px; color: var(--gray-500); margin-bottom: 16px; }
+        .property-card .meta { display: flex; gap: 16px; }
+        .property-card .meta span {
+            font-size: 13px; color: var(--gray-600);
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        /* ─── Empty State ──────────────────── */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--gray-400);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 20px; color: var(--gray-600); margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; margin-bottom: 24px; }
+
+        /* ─── Notification bell ────────────── */
+        .notif-bell { position: relative; cursor: pointer; }
+        .notif-count {
+            position: absolute; top: -6px; right: -6px;
+            background: var(--danger); color: white; font-size: 10px; font-weight: 700;
+            width: 18px; height: 18px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ─── Property Detail View ────────── */
+        .detail-back {
+            display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+            font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 16px;
+            background: none; border: none; padding: 0;
+        }
+        .detail-back:hover { text-decoration: underline; }
+        .units-table { width: 100%; border-collapse: collapse; }
+        .units-table th, .units-table td {
+            padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--gray-100);
+            font-size: 14px;
+        }
+        .units-table th { font-weight: 600; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .units-table tr:hover { background: var(--gray-50); }
+        .btn-icon {
+            background: none; border: 1px solid var(--gray-200); border-radius: 6px;
+            padding: 4px 8px; cursor: pointer; font-size: 14px; margin-right: 4px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { border-color: var(--primary); background: #EEF2FF; }
+        .btn-icon.danger:hover { border-color: var(--danger); background: #FEE2E2; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">P</div>
+            <span>PropManage</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="section-label">Main</div>
+            <a href="#" class="active" data-section="dashboard"><span class="icon">&#128200;</span> Dashboard</a>
+            <a href="#" data-section="properties"><span class="icon">&#127968;</span> Properties</a>
+            <a href="#" data-section="tenants"><span class="icon">&#128101;</span> Tenants</a>
+
+            <div class="section-label">Operations</div>
+            <a href="#" data-section="maintenance"><span class="icon">&#128295;</span> Maintenance</a>
+            <a href="#" data-section="parking"><span class="icon">&#128663;</span> Parking</a>
+            <a href="#" data-section="violations"><span class="icon">&#9888;</span> Violations</a>
+            <a href="#" data-section="notifications"><span class="icon">&#128276;</span> Notifications</a>
+
+            <div class="section-label">Account</div>
+            <a href="#" data-section="billing"><span class="icon">&#128179;</span> Plans & Billing</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="avatar" id="user-avatar">LL</div>
+            <div class="info">
+                <div class="name" id="user-name">Landlord</div>
+                <div class="role">Property Manager</div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#9211;</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- ═══ Dashboard Section ═══ -->
+        <div class="section active" id="section-dashboard">
+            <div class="page-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p class="subtitle" id="greeting">Welcome back!</p>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">&#127968;</div>
+                    <div class="stat-value" id="stat-properties">0</div>
+                    <div class="stat-label">Properties</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">&#128101;</div>
+                    <div class="stat-value" id="stat-tenants">0</div>
+                    <div class="stat-label">Total Tenants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">&#128295;</div>
+                    <div class="stat-value" id="stat-maintenance">0</div>
+                    <div class="stat-label">Open Maintenance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">&#128663;</div>
+                    <div class="stat-value" id="stat-parking">0</div>
+                    <div class="stat-label">Parking Complaints</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Recent Activity</h3>
+                </div>
+                <div class="panel-body" id="recent-activity">
+                    <div class="empty-state">
+                        <div class="icon">&#128203;</div>
+                        <h3>No recent activity</h3>
+                        <p>Activity will appear here as tenants submit requests and Stacy handles operations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Properties Section ═══ -->
+        <div class="section" id="section-properties">
+            <div class="page-header">
+                <div>
+                    <h1>Properties</h1>
+                    <p class="subtitle">Manage your property portfolio</p>
+                </div>
+                <button class="btn btn-primary" onclick="openModal('add-property-modal')">+ Add Property</button>
+            </div>
+            <div class="property-grid" id="properties-list">
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="icon">&#127968;</div>
+                    <h3>No properties yet</h3>
+                    <p>Add your first property to get started.</p>
+                    <button class="btn btn-primary" onclick="openModal('add-property-modal')">+ Add Property</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Tenants Section ═══ -->
+        <div class="section" id="section-tenants">
+            <div class="page-header">
+                <div>
+                    <h1>Tenants</h1>
+                    <p class="subtitle">Manage all tenants across your properties</p>
+                </div>
+                <button class="btn btn-primary" onclick="openModal('add-tenant-modal')">+ Add Tenant</button>
+            </div>
+            <div id="tenants-content">
+                <div class="empty-state">
+                    <div class="icon">&#128101;</div>
+                    <h3>No tenants yet</h3>
+                    <p>Add a property first, then add tenants.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Maintenance Section ═══ -->
+        <div class="section" id="section-maintenance">
+            <div class="page-header">
+                <div>
+                    <h1>Maintenance Requests</h1>
+                    <p class="subtitle">Track and manage repair requests</p>
+                </div>
+            </div>
+            <div id="maintenance-content">
+                <div class="empty-state">
+                    <div class="icon">&#128295;</div>
+                    <h3>No maintenance requests</h3>
+                    <p>Requests from tenants will appear here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Parking Section ═══ -->
+        <div class="section" id="section-parking">
+            <div class="page-header">
+                <div>
+                    <h1>Parking Complaints</h1>
+                    <p class="subtitle">Monitor parking violations and enforcement</p>
+                </div>
+            </div>
+            <div id="parking-content">
+                <div class="empty-state">
+                    <div class="icon">&#128663;</div>
+                    <h3>No parking complaints</h3>
+                    <p>Complaints filed through Stacy will appear here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Violations Section ═══ -->
+        <div class="section" id="section-violations">
+            <div class="page-header">
+                <div>
+                    <h1>Violations & Fines</h1>
+                    <p class="subtitle">Review violations and manage fines</p>
+                </div>
+            </div>
+            <div id="violations-content">
+                <div class="empty-state">
+                    <div class="icon">&#9888;</div>
+                    <h3>No violations</h3>
+                    <p>Violations will appear here when parking complaints or other issues are reported.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Notifications Section ═══ -->
+        <div class="section" id="section-notifications">
+            <div class="page-header">
+                <div>
+                    <h1>Notifications</h1>
+                    <p class="subtitle">SMS, email, and system notifications</p>
+                </div>
+            </div>
+            <div id="notifications-content">
+                <div class="empty-state">
+                    <div class="icon">&#128276;</div>
+                    <h3>No notifications</h3>
+                    <p>Notifications will appear as Stacy handles tenant requests.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Billing Section ═══ -->
+        <div class="section" id="section-billing">
+            <div class="page-header">
+                <div>
+                    <h1>Plans & Billing</h1>
+                    <p class="subtitle">Manage your subscription</p>
+                </div>
+            </div>
+            <div id="billing-content"></div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══ Add Property Modal ═══ -->
+<div class="modal-overlay" id="add-property-modal">
+    <div class="modal">
+        <div class="modal-title">Add New Property</div>
+        <form onsubmit="handleAddProperty(event)">
+            <div class="form-group">
+                <label>Property Name</label>
+                <input type="text" class="form-control" id="prop-name" placeholder="Sunset Apartments" required>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" class="form-control" id="prop-address" placeholder="123 Main Street" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" class="form-control" id="prop-city" placeholder="New York" required>
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" class="form-control" id="prop-state" placeholder="NY" required>
+                </div>
+                <div class="form-group">
+                    <label>ZIP</label>
+                    <input type="text" class="form-control" id="prop-zip" placeholder="10001" required>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Total Units</label>
+                    <input type="number" class="form-control" id="prop-units" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Max Vehicles/Unit</label>
+                    <input type="number" class="form-control" id="prop-vehicles" value="2" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Parking Violation Fee ($)</label>
+                <input type="number" class="form-control" id="prop-parking-fee" value="50" min="0">
+            </div>
+            <div class="form-group">
+                <label>Maintenance Company Email</label>
+                <input type="email" class="form-control" id="prop-maint-email" placeholder="maintenance@company.com">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-property-modal')" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Add Property</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Add Tenant Modal ═══ -->
+<div class="modal-overlay" id="add-tenant-modal">
+    <div class="modal">
+        <div class="modal-title">Add New Tenant</div>
+        <form onsubmit="handleAddTenant(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" class="form-control" id="tenant-fname" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" class="form-control" id="tenant-lname" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" class="form-control" id="tenant-email" required>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" class="form-control" id="tenant-phone">
+            </div>
+            <div class="form-group">
+                <label>Temporary Password</label>
+                <input type="text" class="form-control" id="tenant-password" value="welcome123" required>
+            </div>
+            <div class="form-group">
+                <label>Property</label>
+                <select class="form-control" id="tenant-property" onchange="loadUnitsForTenant()" required>
+                    <option value="">Select Property</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <select class="form-control" id="tenant-unit" required>
+                    <option value="">Select Unit</option>
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Lease Start</label>
+                    <input type="date" class="form-control" id="tenant-lease-start">
+                </div>
+                <div class="form-group">
+                    <label>Lease End</label>
+                    <input type="date" class="form-control" id="tenant-lease-end">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Lease Agreement (Optional - PDF, PNG, JPEG)</label>
+                <input type="file" class="form-control" id="tenant-lease-file" accept=".pdf,.png,.jpg,.jpeg">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-tenant-modal')" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Add Tenant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Add Vehicle Modal ═══ -->
+<div class="modal-overlay" id="add-vehicle-modal">
+    <div class="modal">
+        <div class="modal-title">Register Vehicle</div>
+        <form onsubmit="handleAddVehicle(event)">
+            <input type="hidden" id="vehicle-tenant-id">
+            <div class="form-group">
+                <label>Owner Name</label>
+                <input type="text" class="form-control" id="vehicle-owner" required>
+            </div>
+            <div class="form-group">
+                <label>License Plate</label>
+                <input type="text" class="form-control" id="vehicle-plate" required style="text-transform: uppercase;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Make</label>
+                    <input type="text" class="form-control" id="vehicle-make" placeholder="Toyota">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" class="form-control" id="vehicle-model" placeholder="Camry">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Color</label>
+                    <input type="text" class="form-control" id="vehicle-color" placeholder="Black">
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="number" class="form-control" id="vehicle-year" placeholder="2023">
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-vehicle-modal')" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Register Vehicle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Add Unit Modal ═══ -->
+<div class="modal-overlay" id="add-unit-modal">
+    <div class="modal">
+        <div class="modal-title">Add Unit</div>
+        <form onsubmit="handleAddUnit(event)">
+            <input type="hidden" id="unit-property-id">
+            <div class="form-group">
+                <label>Unit Number</label>
+                <input type="text" class="form-control" id="unit-number" placeholder="1A" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Bedrooms</label>
+                    <input type="number" class="form-control" id="unit-bedrooms" value="1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Bathrooms</label>
+                    <input type="number" class="form-control" id="unit-bathrooms" value="1" min="0" step="0.5">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Rent Amount ($)</label>
+                <input type="number" class="form-control" id="unit-rent" placeholder="2400">
+            </div>
+            <div class="form-group">
+                <label>Parking Spot</label>
+                <input type="text" class="form-control" id="unit-parking" placeholder="A1">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-unit-modal')" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Add Unit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Edit Unit Modal ═══ -->
+<div class="modal-overlay" id="edit-unit-modal">
+    <div class="modal">
+        <div class="modal-title">Edit Unit</div>
+        <form onsubmit="handleEditUnit(event)">
+            <input type="hidden" id="edit-unit-id">
+            <div class="form-group">
+                <label>Unit Number</label>
+                <input type="text" class="form-control" id="edit-unit-number" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Bedrooms</label>
+                    <input type="number" class="form-control" id="edit-unit-bedrooms" value="1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Bathrooms</label>
+                    <input type="number" class="form-control" id="edit-unit-bathrooms" value="1" min="0" step="0.5">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Rent Amount ($)</label>
+                <input type="number" class="form-control" id="edit-unit-rent" placeholder="2400">
+            </div>
+            <div class="form-group">
+                <label>Parking Spot</label>
+                <input type="text" class="form-control" id="edit-unit-parking" placeholder="A1">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-unit-modal')" style="flex: 1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Violation Review Modal ═══ -->
+<div class="modal-overlay" id="review-violation-modal">
+    <div class="modal">
+        <div class="modal-title">Review Violation</div>
+        <input type="hidden" id="review-violation-id">
+        <div id="review-violation-details" style="margin-bottom: 20px; padding: 16px; background: #FEF2F2; border-radius: 8px; border-left: 4px solid #DC2626;">
+        </div>
+        <div class="form-group">
+            <label>Fine Amount ($)</label>
+            <input type="number" class="form-control" id="review-fine-amount" placeholder="50.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+            <label>Reason (optional — leave blank for Stacy to auto-fill)</label>
+            <textarea class="form-control" id="review-fine-reason" rows="3" placeholder="Reason for the fine..."></textarea>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('review-violation-modal')" style="flex: 1;">Cancel</button>
+            <button type="button" class="btn" style="flex: 1; background: #6B7280; color: white;" onclick="handleDismissViolation()">Dismiss</button>
+            <button type="button" class="btn btn-primary" style="flex: 1; background: #DC2626;" onclick="handleFineViolation()">Issue Fine</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input for lease uploads on existing tenants -->
+<input type="file" id="lease-file-input" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handleLeaseFileSelected(event)">
+
+<script src="/web/js/app.js"></script>
+<script>
+    // Auth check
+    if (!requireAuth('landlord')) { /* redirected */ }
+
+    const user = getUser();
+    if (user) {
+        document.getElementById('user-name').textContent = `${user.first_name} ${user.last_name}`;
+        document.getElementById('user-avatar').textContent = `${user.first_name[0]}${user.last_name[0]}`;
+        document.getElementById('greeting').textContent = `Welcome back, ${user.first_name}!`;
+    }
+
+    // Check plan
+    if (user && !user.has_plan) {
+        window.location.href = '/web/plans.html';
+    }
+
+    // Navigation
+    let currentProperties = [];
+    let currentDetailPropId = null;  // Track if we're in property detail view
+
+    document.querySelectorAll('.sidebar-nav a[data-section]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = link.dataset.section;
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`section-${section}`).classList.add('active');
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            link.classList.add('active');
+
+            if (section === 'properties') { currentDetailPropId = null; loadProperties(); }
+            if (section === 'dashboard') loadDashboard();
+            if (section === 'tenants') loadTenants();
+            if (section === 'maintenance') loadMaintenance();
+            if (section === 'parking') loadParking();
+            if (section === 'violations') loadViolations();
+            if (section === 'notifications') loadNotifications();
+            if (section === 'billing') loadBilling();
+        });
+    });
+
+    function handleLogout() {
+        clearAuth();
+        window.location.href = '/web/landlord-login.html';
+    }
+
+    // ─── Load Dashboard ──────────────────
+    async function loadDashboard() {
+        try {
+            const stats = await apiCall('/api/dashboard/stats');
+            document.getElementById('stat-properties').textContent = stats.total_properties || 0;
+            document.getElementById('stat-tenants').textContent = stats.total_tenants || 0;
+            document.getElementById('stat-maintenance').textContent = stats.open_maintenance || 0;
+            document.getElementById('stat-parking').textContent = stats.open_parking || 0;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // ─── Load Properties ─────────────────
+    async function loadProperties() {
+        try {
+            const properties = await apiCall('/api/properties');
+            currentProperties = properties;
+            const container = document.getElementById('properties-list');
+
+            if (properties.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="icon">&#127968;</div>
+                        <h3>No properties yet</h3>
+                        <p>Add your first property to get started.</p>
+                        <button class="btn btn-primary" onclick="openModal('add-property-modal')">+ Add Property</button>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = properties.map(p => `
+                <div class="property-card" onclick="viewProperty(${p.id})">
+                    <h4>${p.name}</h4>
+                    <div class="address">${p.address}, ${p.city}, ${p.state} ${p.zip_code}</div>
+                    <div class="meta">
+                        <span>&#127968; ${p.total_units} Units</span>
+                        <span>&#128663; Max ${p.max_vehicles_per_unit} vehicles/unit</span>
+                        <span>&#128176; $${p.parking_violation_fee} violation fee</span>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); showAddUnit(${p.id})">+ Add Unit</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function showAddUnit(propId) {
+        document.getElementById('unit-property-id').value = propId;
+        openModal('add-unit-modal');
+    }
+
+    async function viewProperty(propId) {
+        currentDetailPropId = propId;
+        try {
+            const prop = currentProperties.find(p => p.id === propId);
+            const [units, tenants] = await Promise.all([
+                apiCall(`/api/properties/${propId}/units`),
+                apiCall(`/api/properties/${propId}/tenants`),
+            ]);
+
+            const container = document.getElementById('properties-list');
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1;">
+                    <button class="detail-back" onclick="currentDetailPropId=null; loadProperties();">&#8592; Back to Properties</button>
+                    <div class="panel" style="margin-bottom: 24px;">
+                        <div class="panel-header">
+                            <h3>${prop ? prop.name : 'Property'}</h3>
+                            <span style="font-size: 14px; color: var(--gray-500);">${prop ? `${prop.address}, ${prop.city}, ${prop.state} ${prop.zip_code}` : ''}</span>
+                        </div>
+                    </div>
+
+                    <!-- Units Section -->
+                    <div class="panel" style="margin-bottom: 24px;">
+                        <div class="panel-header">
+                            <h3>Units (${units.length})</h3>
+                            <button class="btn btn-sm btn-primary" onclick="showAddUnit(${propId})">+ Add Unit</button>
+                        </div>
+                        <div class="panel-body no-pad">
+                            ${units.length === 0 ? `
+                                <div class="empty-state" style="padding: 32px;">
+                                    <h3>No units yet</h3>
+                                    <p>Add units to this property.</p>
+                                </div>
+                            ` : `
+                                <table class="units-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit #</th>
+                                            <th>Bedrooms</th>
+                                            <th>Bathrooms</th>
+                                            <th>Rent</th>
+                                            <th>Parking</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${units.map(u => `
+                                            <tr>
+                                                <td style="font-weight: 700;">${u.unit_number}</td>
+                                                <td>${u.bedrooms}</td>
+                                                <td>${u.bathrooms}</td>
+                                                <td>${u.rent_amount ? '$' + u.rent_amount.toLocaleString() : 'N/A'}</td>
+                                                <td>${u.parking_spot || 'N/A'}</td>
+                                                <td><span class="badge ${u.is_occupied ? 'badge-info' : 'badge-success'}">${u.is_occupied ? 'Occupied' : 'Vacant'}</span></td>
+                                                <td>
+                                                    <button class="btn-icon" onclick="openEditUnit(${JSON.stringify(u).replace(/"/g, '&quot;')})" title="Edit">&#9998;</button>
+                                                    <button class="btn-icon danger" onclick="deleteUnit(${u.id}, ${propId})" title="Delete">&#128465;</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Tenants Section -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Tenants (${tenants.length})</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openModal('add-tenant-modal'); prefillTenantProperty(${propId});">+ Add Tenant</button>
+                        </div>
+                        <div class="panel-body no-pad">
+                            ${tenants.length === 0 ? `
+                                <div class="empty-state" style="padding: 32px;">
+                                    <h3>No tenants yet</h3>
+                                    <p>Add tenants to this property.</p>
+                                </div>
+                            ` : `
+                                <table class="units-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tenant</th>
+                                            <th>Unit</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                            <th>Lease</th>
+                                            <th>Lease File</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tenants.map(t => `
+                                            <tr>
+                                                <td style="font-weight: 600;">${t.first_name} ${t.last_name}</td>
+                                                <td>${t.unit_number || 'N/A'}</td>
+                                                <td>${t.phone || 'N/A'}</td>
+                                                <td>${t.email}</td>
+                                                <td>${t.lease_start ? `${t.lease_start} to ${t.lease_end || '—'}` : 'No lease'}</td>
+                                                <td>
+                                                    ${t.has_lease_file ? `
+                                                        <button class="btn btn-sm btn-secondary" onclick="downloadLease(${t.id})">View</button>
+                                                    ` : '<span style="color: var(--gray-400);">None</span>'}
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-secondary" onclick="triggerLeaseUpload(${t.id})">Upload Lease</button>
+                                                    <button class="btn btn-sm btn-secondary" onclick="showAddVehicle(${t.id})">+ Vehicle</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function prefillTenantProperty(propId) {
+        const propSelect = document.getElementById('tenant-property');
+        // Ensure properties are loaded in the dropdown
+        if (propSelect.options.length <= 1) {
+            propSelect.innerHTML = '<option value="">Select Property</option>' +
+                currentProperties.map(p => `<option value="${p.id}" ${p.id === propId ? 'selected' : ''}>${p.name}</option>`).join('');
+        } else {
+            propSelect.value = propId;
+        }
+        loadUnitsForTenant();
+    }
+
+    // ─── Load Tenants ────────────────────
+    async function loadTenants() {
+        try {
+            const properties = await apiCall('/api/properties');
+            if (properties.length === 0) {
+                document.getElementById('tenants-content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">&#128101;</div>
+                        <h3>No tenants yet</h3>
+                        <p>Add a property first, then add tenants.</p>
+                    </div>`;
+                return;
+            }
+
+            let allTenants = [];
+            let allUnits = [];
+            for (const p of properties) {
+                const tenants = await apiCall(`/api/properties/${p.id}/tenants`);
+                const units = await apiCall(`/api/properties/${p.id}/units`);
+                allTenants = allTenants.concat(tenants.map(t => ({ ...t, property_name: p.name })));
+                allUnits = allUnits.concat(units);
+            }
+
+            renderTenants(allTenants, allUnits);
+
+            // Populate tenant modal dropdowns
+            const propSelect = document.getElementById('tenant-property');
+            propSelect.innerHTML = '<option value="">Select Property</option>' +
+                properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderTenants(tenants, units, propId) {
+        const container = document.getElementById('tenants-content');
+        if (tenants.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">&#128101;</div>
+                    <h3>No tenants yet</h3>
+                    <p>Add your first tenant.</p>
+                    <button class="btn btn-primary" onclick="openModal('add-tenant-modal')">+ Add Tenant</button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Unit</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Lease</th>
+                            <th>Lease File</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tenants.map(t => `
+                            <tr>
+                                <td style="font-weight: 600;">${t.first_name} ${t.last_name}</td>
+                                <td>${t.unit_number || 'N/A'}</td>
+                                <td>${t.phone || 'N/A'}</td>
+                                <td>${t.email}</td>
+                                <td>${t.lease_start ? `${t.lease_start} to ${t.lease_end || '—'}` : 'No lease'}</td>
+                                <td>
+                                    ${t.has_lease_file ? `
+                                        <button class="btn btn-sm btn-secondary" onclick="downloadLease(${t.id})">View</button>
+                                    ` : '<span style="color: var(--gray-400);">None</span>'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="triggerLeaseUpload(${t.id})">Upload Lease</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="showAddVehicle(${t.id})">+ Vehicle</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
+    function showAddVehicle(tenantProfileId) {
+        document.getElementById('vehicle-tenant-id').value = tenantProfileId;
+        openModal('add-vehicle-modal');
+    }
+
+    async function loadUnitsForTenant() {
+        const propId = document.getElementById('tenant-property').value;
+        const unitSelect = document.getElementById('tenant-unit');
+        if (!propId) { unitSelect.innerHTML = '<option value="">Select Unit</option>'; return; }
+
+        const units = await apiCall(`/api/properties/${propId}/units`);
+        unitSelect.innerHTML = '<option value="">Select Unit</option>' +
+            units.map(u => `<option value="${u.id}">Unit ${u.unit_number} (${u.bedrooms}BR/${u.bathrooms}BA) ${u.is_occupied ? '- Occupied' : ''}</option>`).join('');
+    }
+
+    // ─── Lease File Upload/Download ─────
+    let pendingLeaseUploadTenantId = null;
+
+    function triggerLeaseUpload(tenantProfileId) {
+        pendingLeaseUploadTenantId = tenantProfileId;
+        document.getElementById('lease-file-input').click();
+    }
+
+    async function handleLeaseFileSelected(e) {
+        const file = e.target.files[0];
+        if (!file || !pendingLeaseUploadTenantId) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            await apiCall(`/api/tenants/${pendingLeaseUploadTenantId}/lease-file`, {
+                method: 'POST',
+                body: formData,
+            });
+            showToast('Lease file uploaded!');
+            // Refresh the current view
+            if (currentDetailPropId) {
+                viewProperty(currentDetailPropId);
+            } else {
+                loadTenants();
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+        // Reset
+        pendingLeaseUploadTenantId = null;
+        e.target.value = '';
+    }
+
+    async function downloadLease(tenantProfileId) {
+        const token = getToken();
+        try {
+            const response = await fetch(`${API_BASE}/api/tenants/${tenantProfileId}/lease-file`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                showToast(data.detail || 'Failed to download', 'error');
+                return;
+            }
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const disposition = response.headers.get('content-disposition');
+            const filename = disposition ? disposition.split('filename=')[1]?.replace(/"/g, '') : 'lease-file';
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            showToast('Failed to download lease file', 'error');
+        }
+    }
+
+    // ─── Unit Edit/Delete ───────────────
+    function openEditUnit(unit) {
+        document.getElementById('edit-unit-id').value = unit.id;
+        document.getElementById('edit-unit-number').value = unit.unit_number;
+        document.getElementById('edit-unit-bedrooms').value = unit.bedrooms;
+        document.getElementById('edit-unit-bathrooms').value = unit.bathrooms;
+        document.getElementById('edit-unit-rent').value = unit.rent_amount || '';
+        document.getElementById('edit-unit-parking').value = unit.parking_spot || '';
+        openModal('edit-unit-modal');
+    }
+
+    async function handleEditUnit(e) {
+        e.preventDefault();
+        const unitId = document.getElementById('edit-unit-id').value;
+        try {
+            await apiCall(`/api/units/${unitId}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    unit_number: document.getElementById('edit-unit-number').value,
+                    bedrooms: parseInt(document.getElementById('edit-unit-bedrooms').value),
+                    bathrooms: parseFloat(document.getElementById('edit-unit-bathrooms').value),
+                    rent_amount: parseFloat(document.getElementById('edit-unit-rent').value) || null,
+                    parking_spot: document.getElementById('edit-unit-parking').value || null,
+                }),
+            });
+            closeModal('edit-unit-modal');
+            showToast('Unit updated!');
+            if (currentDetailPropId) viewProperty(currentDetailPropId);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function deleteUnit(unitId, propId) {
+        if (!confirm('Are you sure you want to delete this unit?')) return;
+        try {
+            await apiCall(`/api/units/${unitId}`, { method: 'DELETE' });
+            showToast('Unit deleted!');
+            viewProperty(propId);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // ─── Load Violations ─────────────────
+    async function loadViolations() {
+        try {
+            const properties = await apiCall('/api/properties');
+            let allViolations = [];
+            for (const p of properties) {
+                const violations = await apiCall(`/api/properties/${p.id}/violations`);
+                allViolations = allViolations.concat(violations.map(v => ({ ...v, property_name: p.name, property_id: p.id, parking_violation_fee: p.parking_violation_fee })));
+            }
+
+            const container = document.getElementById('violations-content');
+            if (allViolations.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">&#9888;</div><h3>No violations</h3><p>Violations will appear here when parking complaints or other issues are reported.</p></div>`;
+                return;
+            }
+
+            const pending = allViolations.filter(v => v.status === 'pending');
+            const reviewed = allViolations.filter(v => v.status !== 'pending');
+            const fined = allViolations.filter(v => v.fine);
+
+            let html = '';
+
+            // Pending violations
+            if (pending.length > 0) {
+                html += `
+                <div class="panel" style="margin-bottom: 24px;">
+                    <div class="panel-header"><h3>Pending Violations (${pending.length})</h3></div>
+                    <div class="panel-body no-pad">
+                        <table class="units-table">
+                            <thead><tr><th>Date</th><th>Type</th><th>Tenant</th><th>Unit</th><th>Description</th><th>Email Sent</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${pending.map(v => `
+                                    <tr>
+                                        <td>${formatDate(v.created_at)}</td>
+                                        <td><span class="badge badge-warning">${v.type}</span></td>
+                                        <td style="font-weight: 600;">${v.tenant_name}</td>
+                                        <td>${v.unit_number || 'N/A'}</td>
+                                        <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.description}</td>
+                                        <td>${v.email_sent ? '<span style="color: green;">Yes</span>' : '<span style="color: var(--gray-400);">No</span>'}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="openReviewViolation(${v.id}, ${JSON.stringify(v).replace(/"/g, '&quot;')})">Review</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+
+            // Reviewed violations
+            if (reviewed.length > 0) {
+                html += `
+                <div class="panel" style="margin-bottom: 24px;">
+                    <div class="panel-header"><h3>Reviewed Violations (${reviewed.length})</h3></div>
+                    <div class="panel-body no-pad">
+                        <table class="units-table">
+                            <thead><tr><th>Date</th><th>Type</th><th>Tenant</th><th>Unit</th><th>Status</th><th>Notes</th><th>Reviewed</th></tr></thead>
+                            <tbody>
+                                ${reviewed.map(v => `
+                                    <tr>
+                                        <td>${formatDate(v.created_at)}</td>
+                                        <td><span class="badge badge-info">${v.type}</span></td>
+                                        <td style="font-weight: 600;">${v.tenant_name}</td>
+                                        <td>${v.unit_number || 'N/A'}</td>
+                                        <td><span class="badge ${v.status === 'fined' ? 'badge-danger' : 'badge-success'}">${v.status}</span></td>
+                                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.review_notes || 'N/A'}</td>
+                                        <td>${formatDate(v.reviewed_at)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+
+            // Fines
+            if (fined.length > 0) {
+                html += `
+                <div class="panel">
+                    <div class="panel-header"><h3>Issued Fines (${fined.length})</h3></div>
+                    <div class="panel-body no-pad">
+                        <table class="units-table">
+                            <thead><tr><th>Date</th><th>Tenant</th><th>Amount</th><th>Reason</th><th>Status</th><th>Email Sent</th></tr></thead>
+                            <tbody>
+                                ${fined.map(v => `
+                                    <tr>
+                                        <td>${formatDate(v.fine.created_at)}</td>
+                                        <td style="font-weight: 600;">${v.tenant_name}</td>
+                                        <td style="font-weight: 700; color: #DC2626;">$${v.fine.amount.toFixed(2)}</td>
+                                        <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.fine.reason || 'N/A'}</td>
+                                        <td><span class="badge ${v.fine.status === 'paid' ? 'badge-success' : 'badge-warning'}">${v.fine.status}</span></td>
+                                        <td>${v.fine.email_sent ? '<span style="color: green;">Yes</span>' : '<span style="color: var(--gray-400);">No</span>'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        } catch (err) { console.error(err); }
+    }
+
+    function openReviewViolation(violationId, violation) {
+        document.getElementById('review-violation-id').value = violationId;
+        document.getElementById('review-fine-amount').value = violation.parking_violation_fee || 50;
+        document.getElementById('review-fine-reason').value = '';
+        document.getElementById('review-violation-details').innerHTML = `
+            <p style="margin: 0 0 8px; font-weight: 600; color: #991B1B;">Violation #${violation.id} — ${violation.type}</p>
+            <p style="margin: 0 0 4px; font-size: 14px; color: #7F1D1D;">${violation.description}</p>
+            <p style="margin: 8px 0 0; font-size: 13px; color: #991B1B;">Tenant: ${violation.tenant_name} | Unit: ${violation.unit_number || 'N/A'} | Date: ${formatDate(violation.created_at)}</p>
+        `;
+        openModal('review-violation-modal');
+    }
+
+    async function handleDismissViolation() {
+        const violationId = document.getElementById('review-violation-id').value;
+        const reason = document.getElementById('review-fine-reason').value;
+        try {
+            const params = new URLSearchParams({ action: 'dismiss' });
+            if (reason) params.append('reason', reason);
+            await apiCall(`/api/violations/${violationId}/review?${params.toString()}`, { method: 'PUT' });
+            closeModal('review-violation-modal');
+            showToast('Violation dismissed');
+            loadViolations();
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function handleFineViolation() {
+        const violationId = document.getElementById('review-violation-id').value;
+        const amount = parseFloat(document.getElementById('review-fine-amount').value);
+        const reason = document.getElementById('review-fine-reason').value;
+        try {
+            const params = new URLSearchParams({ action: 'fine' });
+            if (amount) params.append('fine_amount', amount);
+            if (reason) params.append('reason', reason);
+            await apiCall(`/api/violations/${violationId}/review?${params.toString()}`, { method: 'PUT' });
+            closeModal('review-violation-modal');
+            showToast('Fine issued and email sent to tenant');
+            loadViolations();
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ─── Load Maintenance ────────────────
+    async function loadMaintenance() {
+        try {
+            const properties = await apiCall('/api/properties');
+            let allMaint = [];
+            for (const p of properties) {
+                const maint = await apiCall(`/api/properties/${p.id}/maintenance`);
+                allMaint = allMaint.concat(maint.map(m => ({ ...m, property_name: p.name })));
+            }
+
+            const container = document.getElementById('maintenance-content');
+            if (allMaint.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">&#128295;</div><h3>No maintenance requests</h3><p>Requests from tenants will appear here.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>ID</th><th>Tenant</th><th>Unit</th><th>Category</th><th>Description</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${allMaint.map(m => `
+                                <tr>
+                                    <td>#${m.id}</td>
+                                    <td style="font-weight: 600;">${m.tenant_name}</td>
+                                    <td>${m.unit_number}</td>
+                                    <td><span class="badge badge-info">${m.category || 'General'}</span></td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.description}</td>
+                                    <td><span class="badge ${getStatusBadge(m.status)}">${m.status}</span></td>
+                                    <td>${formatDate(m.created_at)}</td>
+                                    <td>
+                                        <select class="form-control" style="padding: 6px 10px; font-size: 12px; min-width: 120px;" onchange="updateMaintenanceStatus(${m.id}, this.value)">
+                                            <option value="open" ${m.status === 'open' ? 'selected' : ''}>Open</option>
+                                            <option value="in_progress" ${m.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                                            <option value="scheduled" ${m.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+                                            <option value="completed" ${m.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (err) { console.error(err); }
+    }
+
+    async function updateMaintenanceStatus(id, status) {
+        try {
+            await apiCall(`/api/maintenance/${id}/status?status=${status}`, { method: 'PUT' });
+            showToast('Status updated');
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ─── Load Parking ────────────────────
+    async function loadParking() {
+        try {
+            const properties = await apiCall('/api/properties');
+            let allComplaints = [];
+            for (const p of properties) {
+                const complaints = await apiCall(`/api/properties/${p.id}/parking-complaints`);
+                allComplaints = allComplaints.concat(complaints.map(c => ({ ...c, property_name: p.name })));
+            }
+
+            const container = document.getElementById('parking-content');
+            if (allComplaints.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">&#128663;</div><h3>No parking complaints</h3><p>Complaints filed through Stacy will appear here.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Plate</th><th>Reporter</th><th>Offender</th><th>Status</th><th>Fine</th><th>Date</th></tr></thead>
+                        <tbody>
+                            ${allComplaints.map(c => `
+                                <tr>
+                                    <td style="font-weight: 700;">${c.offending_plate}</td>
+                                    <td>${c.reporter_name}</td>
+                                    <td>${c.offender_name}</td>
+                                    <td><span class="badge ${getStatusBadge(c.status)}">${c.status}</span></td>
+                                    <td>${c.invoice_amount ? '$' + c.invoice_amount : '—'}</td>
+                                    <td>${formatDate(c.created_at)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (err) { console.error(err); }
+    }
+
+    // ─── Load Notifications ──────────────
+    async function loadNotifications() {
+        try {
+            const notifs = await apiCall('/api/notifications');
+            const container = document.getElementById('notifications-content');
+            if (notifs.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">&#128276;</div><h3>No notifications</h3><p>Notifications will appear here.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = notifs.map(n => `
+                <div class="card" style="margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="badge ${n.type === 'sms' ? 'badge-info' : 'badge-primary'}">${n.type.toUpperCase()}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 14px;">${n.subject || 'Notification'}</div>
+                            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">${n.message}</div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--gray-400);">${formatDate(n.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) { console.error(err); }
+    }
+
+    // ─── Load Billing ────────────────────
+    async function loadBilling() {
+        try {
+            const sub = await apiCall('/api/subscription');
+            const container = document.getElementById('billing-content');
+
+            if (!sub) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No active plan</h3>
+                        <p>Select a plan to start managing properties.</p>
+                        <a href="/web/plans.html" class="btn btn-primary">Select a Plan</a>
+                    </div>`;
+                return;
+            }
+
+            const planNames = { base: 'Base', medium: 'Medium', managers: 'Managers', landlord: 'Landlord', custom: 'Custom' };
+
+            container.innerHTML = `
+                <div class="card" style="max-width: 500px; margin-bottom: 24px;">
+                    <div class="card-header">Current Plan</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 28px; font-weight: 800; color: var(--primary);">${planNames[sub.plan] || sub.plan}</div>
+                            <div style="font-size: 14px; color: var(--gray-500);">Active Subscription</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 32px; font-weight: 800;">${formatCurrency(sub.monthly_price)}</div>
+                            <div style="font-size: 13px; color: var(--gray-500);">per month</div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid var(--gray-100); padding-top: 16px; font-size: 14px; color: var(--gray-600);">
+                        <div style="margin-bottom: 6px;">Max Properties: ${sub.max_properties || 'Unlimited'}</div>
+                        <div style="margin-bottom: 6px;">Max Tenants: ${sub.max_tenants || 'Unlimited'}</div>
+                        <div>Setup Fee: ${formatCurrency(sub.setup_fee)}</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <a href="/web/plans.html" class="btn btn-secondary btn-sm">Change Plan</a>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><h3>Payment Method</h3></div>
+                    <div class="panel-body">
+                        <div class="empty-state" style="padding: 32px;">
+                            <div class="icon">&#128179;</div>
+                            <h3>Payment Processing Coming Soon</h3>
+                            <p>Payment processing is currently in demo mode. Full payment integration will be available soon.</p>
+                        </div>
+                    </div>
+                </div>`;
+        } catch (err) { console.error(err); }
+    }
+
+    // ─── Form Handlers ───────────────────
+
+    async function handleAddProperty(e) {
+        e.preventDefault();
+        try {
+            await apiCall('/api/properties', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: document.getElementById('prop-name').value,
+                    address: document.getElementById('prop-address').value,
+                    city: document.getElementById('prop-city').value,
+                    state: document.getElementById('prop-state').value,
+                    zip_code: document.getElementById('prop-zip').value,
+                    total_units: parseInt(document.getElementById('prop-units').value),
+                    max_vehicles_per_unit: parseInt(document.getElementById('prop-vehicles').value),
+                    parking_violation_fee: parseFloat(document.getElementById('prop-parking-fee').value),
+                    maintenance_email: document.getElementById('prop-maint-email').value || null,
+                }),
+            });
+            closeModal('add-property-modal');
+            showToast('Property added successfully!');
+            loadProperties();
+            loadDashboard();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function handleAddUnit(e) {
+        e.preventDefault();
+        const propId = document.getElementById('unit-property-id').value;
+        try {
+            await apiCall(`/api/properties/${propId}/units`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    unit_number: document.getElementById('unit-number').value,
+                    bedrooms: parseInt(document.getElementById('unit-bedrooms').value),
+                    bathrooms: parseFloat(document.getElementById('unit-bathrooms').value),
+                    rent_amount: parseFloat(document.getElementById('unit-rent').value) || null,
+                    parking_spot: document.getElementById('unit-parking').value || null,
+                }),
+            });
+            closeModal('add-unit-modal');
+            showToast('Unit added!');
+            // Reset form fields
+            document.getElementById('unit-number').value = '';
+            document.getElementById('unit-bedrooms').value = '1';
+            document.getElementById('unit-bathrooms').value = '1';
+            document.getElementById('unit-rent').value = '';
+            document.getElementById('unit-parking').value = '';
+            if (currentDetailPropId) {
+                viewProperty(currentDetailPropId);
+            } else {
+                loadProperties();
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function handleAddTenant(e) {
+        e.preventDefault();
+        try {
+            const result = await apiCall('/api/tenants', {
+                method: 'POST',
+                body: JSON.stringify({
+                    first_name: document.getElementById('tenant-fname').value,
+                    last_name: document.getElementById('tenant-lname').value,
+                    email: document.getElementById('tenant-email').value,
+                    phone: document.getElementById('tenant-phone').value || null,
+                    password: document.getElementById('tenant-password').value,
+                    property_id: parseInt(document.getElementById('tenant-property').value),
+                    unit_id: parseInt(document.getElementById('tenant-unit').value),
+                    lease_start: document.getElementById('tenant-lease-start').value || null,
+                    lease_end: document.getElementById('tenant-lease-end').value || null,
+                }),
+            });
+
+            // Upload lease file if provided
+            const leaseFileInput = document.getElementById('tenant-lease-file');
+            if (leaseFileInput.files.length > 0 && result.tenant_profile_id) {
+                const formData = new FormData();
+                formData.append('file', leaseFileInput.files[0]);
+                try {
+                    await apiCall(`/api/tenants/${result.tenant_profile_id}/lease-file`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                } catch (uploadErr) {
+                    showToast('Tenant added but lease file upload failed: ' + uploadErr.message, 'error');
+                }
+                leaseFileInput.value = '';
+            }
+
+            closeModal('add-tenant-modal');
+            showToast('Tenant added successfully!');
+            if (currentDetailPropId) {
+                viewProperty(currentDetailPropId);
+            } else {
+                loadTenants();
+            }
+            loadDashboard();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function handleAddVehicle(e) {
+        e.preventDefault();
+        const tenantId = document.getElementById('vehicle-tenant-id').value;
+        try {
+            await apiCall(`/api/tenants/${tenantId}/vehicles`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    owner_name: document.getElementById('vehicle-owner').value,
+                    plate_number: document.getElementById('vehicle-plate').value.toUpperCase(),
+                    make: document.getElementById('vehicle-make').value || null,
+                    model: document.getElementById('vehicle-model').value || null,
+                    color: document.getElementById('vehicle-color').value || null,
+                    year: parseInt(document.getElementById('vehicle-year').value) || null,
+                }),
+            });
+            closeModal('add-vehicle-modal');
+            showToast('Vehicle registered!');
+            loadTenants();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // Initial load
+    loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Stacy for Property Operations</title>
+  <meta name="description" content="Stacy is your 24/7 AI property operations employee. Handles tenant requests, parking disputes, maintenance, and follow-ups automatically." />
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    body.marketing { background: #fff; }
+    /* Animated hero words */
+    .word-cycle { display: inline-block; position: relative; min-width: 280px; text-align: left; }
+    .word-cycle span { position: absolute; left: 0; opacity: 0; animation: wordFade 9s infinite; color: var(--apple-blue); }
+    .word-cycle span:nth-child(1) { animation-delay: 0s; }
+    .word-cycle span:nth-child(2) { animation-delay: 3s; }
+    .word-cycle span:nth-child(3) { animation-delay: 6s; }
+    @keyframes wordFade { 0%{opacity:0;transform:translateY(6px)} 8%{opacity:1;transform:translateY(0)} 28%{opacity:1;transform:translateY(0)} 36%{opacity:0;transform:translateY(-6px)} 100%{opacity:0} }
+
+    /* Scroll-in animations */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+    .reveal-d3 { transition-delay: 0.3s; }
+
+    /* Tenant testimonial */
+    .testimonial-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 48px; }
+    .testimonial {
+      background: var(--apple-white); border-radius: var(--r-xl);
+      box-shadow: var(--shadow-md); padding: 22px 24px;
+      max-width: 300px; flex: 1; min-width: 220px;
+      border: 0.5px solid var(--border);
+    }
+    .testimonial p { font-size: 14px; color: var(--text-2); line-height: 1.65; font-style: italic; }
+    .testimonial-author { margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--text); }
+    .testimonial-role { font-size: 12px; color: var(--text-3); }
+
+    /* How it works */
+    .how-section { padding: 80px 0; background: var(--apple-white); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; position: relative; }
+    .steps::before { content: ""; position: absolute; top: 28px; left: 10%; right: 10%; height: 1px; background: var(--apple-gray-2); z-index: 0; }
+    .step { text-align: center; padding: 0 20px; position: relative; z-index: 1; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--apple-black); color: #fff;
+      font-size: 20px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; box-shadow: var(--shadow-md);
+    }
+    .step h3 { font-size: 16px; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--text-3); }
+
+    /* CTA section */
+    .cta-section { padding: 80px 0; text-align: center; background: var(--apple-black); }
+    .cta-section h2 { color: #fff; margin-bottom: 14px; }
+    .cta-section p { color: rgba(255,255,255,0.6); font-size: 17px; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+    .feature-split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 64px 0; }
+    @media(max-width:800px){ .feature-split { grid-template-columns: 1fr; } }
+    .feature-split.flip { direction: rtl; }
+    .feature-split.flip > * { direction: ltr; }
+    .feature-mock { background: var(--apple-white); border-radius: var(--r-xl); box-shadow: var(--shadow-xl); padding: 22px; border: 0.5px solid var(--border); }
+    .feature-copy { display: flex; flex-direction: column; gap: 14px; }
+    .feature-tag { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--apple-blue); }
+    .feature-copy h2 { font-size: clamp(24px, 3vw, 34px); }
+    .feature-copy p  { font-size: 16px; color: var(--text-3); line-height: 1.65; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .feature-list li { font-size: 15px; display: flex; align-items: center; gap: 9px; }
+    .feature-list li::before { content: "✓"; color: var(--apple-green); font-weight: 700; font-size: 16px; }
+  </style>
+</head>
+<body class="marketing">
+
+  <nav class="nav marketing-nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">Employee<span>AI</span></a>
+      <div class="nav-actions">
+        <a class="btn ghost" href="./tenant-auth.html">Tenant Portal</a>
+        <a class="btn ghost" href="./auth.html">Log in</a>
+        <a class="btn primary" href="./auth.html">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="hero-eyebrow">
+        <span class="bubble-dot" style="display:inline-block;"></span>
+        AI Property Operations — 24/7
+      </div>
+      <h1>
+        Your properties,<br>
+        <span class="blue">always managed.</span>
+      </h1>
+      <p class="hero-sub">Stacy is your AI property employee — she handles tenant requests, parking enforcement, maintenance coordination, and follow-ups automatically, around the clock.</p>
+      <div class="hero-cta">
+        <a class="btn primary large" href="./auth.html">Start free →</a>
+        <a class="btn large" href="./dashboard.html">View demo</a>
+      </div>
+    </div>
+
+    <!-- Demo chat window -->
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="hero-demo">
+        <div class="hero-demo-header">
+          <div class="demo-dots">
+            <div class="demo-dot r"></div>
+            <div class="demo-dot y"></div>
+            <div class="demo-dot g"></div>
+          </div>
+          <div class="demo-title">Stacy — Tenant Chat</div>
+        </div>
+        <div class="demo-msgs">
+          <div class="demo-bubble from">Someone keeps parking in my spot (2A). It's happened 3 times this week.</div>
+          <div class="demo-bubble to">I'm sorry that keeps happening. I'll get this resolved right away. What's the license plate of the vehicle?</div>
+          <div class="demo-bubble from">7TRK492</div>
+          <div class="demo-bubble to">Got it — I found 7TRK492 in our registry. It's registered to a resident in 4C. I've sent them a warning text and notified your property manager for approval. If it happens again, just let me know and I can escalate to a violation invoice.</div>
+        </div>
+        <div class="demo-chips">
+          <span class="demo-chip">✓ Complaint logged</span>
+          <span class="demo-chip">✓ Resident notified by SMS</span>
+          <span class="demo-chip">✓ Manager alerted</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-num">720h</div>
+          <div class="stat-label">Available per month</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">&lt;10s</div>
+          <div class="stat-label">Response time</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Requests logged</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">$0</div>
+          <div class="stat-label">Extra staff needed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES GRID -->
+  <section class="features-section">
+    <div class="container">
+      <div class="features-label">What Stacy Does</div>
+      <h2>Everything your property needs,<br>handled automatically.</h2>
+      <div class="three-col">
+        <div class="feature-card reveal">
+          <div class="feature-icon">🚗</div>
+          <h3>Parking Enforcement</h3>
+          <p>Stacy identifies the registered owner of any license plate and sends an immediate warning SMS — all without you lifting a finger.</p>
+        </div>
+        <div class="feature-card reveal reveal-d1">
+          <div class="feature-icon">🔧</div>
+          <h3>Maintenance Dispatch</h3>
+          <p>Tenants describe issues in plain language. Stacy creates a ticket, notifies you for approval, and contacts your vendor once approved.</p>
+        </div>
+        <div class="feature-card reveal reveal-d2">
+          <div class="feature-icon">💬</div>
+          <h3>24/7 Tenant Chat</h3>
+          <p>Every tenant gets access to Stacy. She remembers previous conversations and escalates only when human judgment is truly needed.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">📧</div>
+          <h3>Email Triage</h3>
+          <p>Paste any incoming tenant email and Stacy categorizes, creates a workflow, and drafts the appropriate response in seconds.</p>
+        </div>
+        <div class="feature-card reveal reveal-d1">
+          <div class="feature-icon">📋</div>
+          <h3>Lease Workflows</h3>
+          <p>Renewal reminders, move-in checklists, and move-out coordination — all automated and logged with full audit trails.</p>
+        </div>
+        <div class="feature-card reveal reveal-d2">
+          <div class="feature-icon">📊</div>
+          <h3>Operations Dashboard</h3>
+          <p>One command center for all properties, tenants, vehicles, issues, and SMS logs. Nothing gets lost or forgotten.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <div class="container">
+      <div class="features-label">Setup in minutes</div>
+      <h2 style="text-align:center;margin-bottom:48px;">Three steps to full automation.</h2>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <h3>Add your properties</h3>
+          <p>Enter your properties, units, and tenants. Stacy immediately understands your portfolio structure.</p>
+        </div>
+        <div class="step reveal reveal-d1">
+          <div class="step-num">2</div>
+          <h3>Configure Stacy</h3>
+          <p>Set your SMS number, maintenance vendor email, and response policies. Takes under 2 minutes.</p>
+        </div>
+        <div class="step reveal reveal-d2">
+          <div class="step-num">3</div>
+          <h3>Invite tenants</h3>
+          <p>Generate one-click invite links. Tenants get access to their portal and Stacy is online for them immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing-section">
+    <div class="container">
+      <div class="features-label">Pricing</div>
+      <h2>Plans that grow with your portfolio.</h2>
+      <div class="plans-grid" style="margin-top:42px;" id="marketingPlansGrid"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to put your operations on autopilot?</h2>
+      <p>Join landlords who've saved hours every week by letting Stacy handle the routine.</p>
+      <div class="hero-cta">
+        <a class="btn large" style="background:#fff;color:var(--apple-black);" href="./auth.html">Create free account →</a>
+        <a class="btn large" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.2);" href="./tenant-auth.html">Tenant portal</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-brand">Employee<span style="color:var(--apple-blue);">AI</span></span>
+        <div class="footer-links">
+          <a href="./auth.html">Landlord Login</a>
+          <a href="./tenant-auth.html">Tenant Portal</a>
+          <a href="./dashboard.html">Dashboard</a>
+        </div>
+        <span>© 2026 EmployeeAI. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/plans.js"></script>
+  <script>
+    // Render plans in marketing grid
+    window.addEventListener('DOMContentLoaded', () => {
+      const grid = document.getElementById('marketingPlansGrid');
+      if (!grid || !window.EmployeeAIPlanUtils) return;
+      const names = window.EmployeeAIPlanUtils.listNames();
+      grid.innerHTML = names.map(n => {
+        const p = window.EmployeeAIPlanUtils.getPlan(n);
+        const monthly = n === 'Custom' ? '$999+' : `$${p.monthly}`;
+        const setup = (p.setup === null || p.setup === undefined) ? 'Custom' : `$${p.setup} setup`;
+        const bullets = Array.isArray(p.bullets) ? p.bullets.map(b => `<li>${b}</li>`).join('') : '';
+        const isPopular = n === 'Managers';
+        return `<div class="plan-card${isPopular ? ' current' : ''}">
+          ${isPopular ? '<span class="popular-tag">Most Popular</span>' : ''}
+          <div class="plan-name">${n}</div>
+          <div class="plan-price">${monthly}<span>/mo</span></div>
+          <div class="plan-setup">${setup}</div>
+          <ul style="margin:4px 0;">${bullets}</ul>
+          <a href="./auth.html" class="btn ${isPopular ? 'primary' : ''}" style="text-align:center;">Get started</a>
+        </div>`;
+      }).join('');
+
+      // Scroll reveal
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    });
+  </script>
+</body>
+</html>

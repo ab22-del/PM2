@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landlord Login — PropManage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #0F172A, #1E1B4B);
+        }
+        .login-page {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+        .login-brand {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            color: white;
+        }
+        .login-brand h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .login-brand h1 span { color: #818CF8; }
+        .login-brand p {
+            font-size: 18px;
+            color: #94A3B8;
+            line-height: 1.7;
+            max-width: 480px;
+        }
+        .login-brand .features-list {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .login-brand .features-list div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #CBD5E1;
+            font-size: 15px;
+        }
+        .login-brand .features-list .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(129,140,248,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .login-form-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow-xl);
+        }
+        .login-card .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+        .login-card .logo .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .login-card .logo span {
+            font-size: 22px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-card h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .login-card .subtitle {
+            font-size: 15px;
+            color: var(--gray-500);
+            margin-bottom: 32px;
+        }
+        .login-card .form-group { margin-bottom: 20px; }
+        .login-card .form-control {
+            padding: 14px 16px;
+            font-size: 15px;
+        }
+        .login-card .btn {
+            padding: 14px;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .login-card .divider {
+            text-align: center;
+            margin: 24px 0;
+            color: var(--gray-400);
+            font-size: 14px;
+        }
+        .login-card .alt-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--gray-500);
+        }
+        .login-card .alt-link a {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .error-msg {
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .login-brand { display: none; }
+            .login-card { padding: 32px; }
+        }
+    </style>
+</head>
+<body>
+<div class="login-page">
+    <div class="login-brand">
+        <a href="/web/index.html" style="color: white; margin-bottom: 40px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; opacity: 0.7;">&#8592; Back to Home</a>
+        <h1>Welcome Back,<br><span>Landlord</span></h1>
+        <p>Access your property management dashboard, view tenant requests, and let Stacy handle the rest.</p>
+        <div class="features-list">
+            <div><div class="icon">&#128200;</div> Real-time property dashboard</div>
+            <div><div class="icon">&#128101;</div> Complete tenant management</div>
+            <div><div class="icon">&#129302;</div> Stacy AI handling requests 24/7</div>
+            <div><div class="icon">&#128276;</div> Instant notifications & alerts</div>
+        </div>
+    </div>
+    <div class="login-form-wrapper">
+        <div class="login-card">
+            <div class="logo">
+                <div class="logo-icon">P</div>
+                <span>PropManage</span>
+            </div>
+            <h2>Landlord Login</h2>
+            <p class="subtitle">Sign in to manage your properties</p>
+
+            <div class="error-msg" id="error-msg"></div>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="login-btn">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="divider">or</div>
+            <div class="alt-link">
+                Don't have an account? <a href="/web/landlord-register.html">Create one now</a>
+            </div>
+            <div class="alt-link" style="margin-top: 12px;">
+                Are you a tenant? <a href="/web/tenant-login.html">Tenant Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/web/js/app.js"></script>
+<script>
+async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const errorEl = document.getElementById('error-msg');
+    errorEl.style.display = 'none';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+        errorEl.textContent = 'Please fill in all fields';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+    try {
+        const data = await apiCall('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (data.role !== 'landlord' && data.role !== 'owner') {
+            errorEl.textContent = 'This login is for landlords only. Please use the tenant login.';
+            errorEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+            return;
+        }
+
+        setAuth(data);
+
+        // Redirect based on role and plan status
+        if (data.role === 'owner') {
+            window.location.href = '/web/owner-portal.html';
+        } else if (data.has_plan) {
+            window.location.href = '/web/landlord-portal.html';
+        } else {
+            window.location.href = '/web/plans.html';
+        }
+    } catch (err) {
+        errorEl.textContent = err.message || 'Invalid email or password';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+}
+
+// If already logged in as landlord or owner, redirect
+if (isLoggedIn()) {
+    const user = getUser();
+    if (user && user.role === 'owner') {
+        window.location.href = '/web/owner-portal.html';
+    } else if (user && user.role === 'landlord') {
+        window.location.href = user.has_plan ? '/web/landlord-portal.html' : '/web/plans.html';
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Stacy: Your 24/7 AI Property Operations Assistant</title>
+  <meta name="description" content="Stacy handles tenant requests, parking disputes, maintenance coordination, and rent reminders automatically. Stop drowning in emails — let AI manage your properties." />
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    /* Counter animation */
+    .counter { display: inline-block; }
+    /* Floating badges on hero */
+    .float-badge {
+      position: absolute; padding: 10px 16px; border-radius: var(--r-lg);
+      background: var(--white); box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+      font-size: 13px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+      animation: float 4s ease-in-out infinite;
+      z-index: 2;
+    }
+    .float-badge .fb-icon { font-size: 20px; }
+    .fb-1 { top: 20%; left: 5%; animation-delay: 0s; }
+    .fb-2 { top: 35%; right: 3%; animation-delay: 1.3s; }
+    .fb-3 { bottom: 25%; left: 8%; animation-delay: 2.6s; }
+    @media(max-width:900px) { .float-badge { display: none; } }
+    /* Comparison table */
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 32px; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--gray-200); }
+    .compare-table th, .compare-table td { padding: 14px 20px; text-align: left; font-size: 14px; }
+    .compare-table thead th { background: var(--gray-900); color: #fff; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .compare-table tbody td { border-bottom: 1px solid var(--gray-100); }
+    .compare-table tbody tr:last-child td { border-bottom: none; }
+    .compare-table .check { color: var(--emerald); font-weight: 700; font-size: 18px; }
+    .compare-table .cross { color: var(--gray-300); font-size: 18px; }
+    .compare-table tbody tr:hover td { background: var(--gray-50); }
+    /* Testimonials */
+    .testimonial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 40px; }
+    .testimonial {
+      background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border); padding: 24px;
+    }
+    .testimonial p { font-size: 14px; color: var(--text-2); line-height: 1.65; font-style: italic; }
+    .testimonial-author { margin-top: 16px; display: flex; align-items: center; gap: 10px; }
+    .testimonial-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-soft), var(--violet-soft)); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--brand); }
+    .testimonial-name { font-size: 14px; font-weight: 700; }
+    .testimonial-role { font-size: 12px; color: var(--text-3); }
+    /* FAQ */
+    .faq-list { max-width: 700px; margin: 40px auto 0; }
+    .faq-item { border-bottom: 1px solid var(--gray-100); }
+    .faq-q { padding: 18px 0; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+    .faq-q::after { content: "+"; font-size: 20px; color: var(--text-3); transition: transform 0.2s; }
+    .faq-item.open .faq-q::after { transform: rotate(45deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; font-size: 14px; color: var(--text-2); line-height: 1.65; }
+    .faq-item.open .faq-a { max-height: 200px; padding-bottom: 18px; }
+  </style>
+</head>
+<body class="marketing">
+
+  <nav class="nav marketing-nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">Employee<span>AI</span></a>
+      <div class="nav-actions">
+        <a class="btn ghost" href="./tenant-auth.html">Tenant Portal</a>
+        <a class="btn ghost" href="./auth.html">Log in</a>
+        <a class="btn primary" href="./auth.html">Start Free Trial →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="float-badge fb-1"><span class="fb-icon">🚗</span> Parking complaint resolved</div>
+    <div class="float-badge fb-2"><span class="fb-icon">🔧</span> Maintenance dispatched</div>
+    <div class="float-badge fb-3"><span class="fb-icon">💬</span> Tenant responded in 8s</div>
+
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="hero-eyebrow">
+        <span class="bubble-dot" style="display:inline-block;"></span>
+        AI-Powered Property Operations
+      </div>
+      <h1>
+        Stop managing tenants.<br>
+        <span class="gradient">Let Stacy do it.</span>
+      </h1>
+      <p class="hero-sub">Stacy is your AI property employee — she handles tenant requests, parking enforcement, maintenance coordination, rent reminders, and follow-ups. 24/7. Instantly.</p>
+      <div class="hero-cta">
+        <a class="btn primary large" href="./auth.html">Get Started Free →</a>
+        <a class="btn ghost large" href="#demo">See how it works</a>
+      </div>
+    </div>
+
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="hero-demo" id="demo">
+        <div class="hero-demo-header">
+          <div class="demo-dots">
+            <div class="demo-dot r"></div>
+            <div class="demo-dot y"></div>
+            <div class="demo-dot g"></div>
+          </div>
+          <div class="demo-title">Stacy — Live Tenant Chat</div>
+        </div>
+        <div class="demo-msgs">
+          <div class="demo-bubble from">Someone keeps parking in my spot (2A). It's happened 3 times this week.</div>
+          <div class="demo-bubble to">I'm sorry that keeps happening — I'll get this resolved right now. What's the license plate of the vehicle in your spot?</div>
+          <div class="demo-bubble from">7TRK492</div>
+          <div class="demo-bubble to">Found it — 7TRK492 is registered to a resident in 4C. I've sent them an immediate warning text to move their vehicle and notified your property manager with full details. If it happens again, I can escalate to a violation invoice.</div>
+        </div>
+        <div class="demo-chips">
+          <span class="demo-chip">✓ Complaint logged</span>
+          <span class="demo-chip">✓ Resident warned via SMS</span>
+          <span class="demo-chip">✓ Manager notified</span>
+          <span class="demo-chip">✓ Invoice ready if needed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ STATS ═══ -->
+  <div class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item reveal">
+          <div class="stat-num">24/7</div>
+          <div class="stat-label">Always on duty</div>
+        </div>
+        <div class="stat-item reveal reveal-d1">
+          <div class="stat-num">&lt;10s</div>
+          <div class="stat-label">Average response time</div>
+        </div>
+        <div class="stat-item reveal reveal-d2">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Requests documented</div>
+        </div>
+        <div class="stat-item reveal reveal-d3">
+          <div class="stat-num">$0</div>
+          <div class="stat-label">Additional staff needed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ WHAT STACY DOES ═══ -->
+  <section class="features-section">
+    <div class="container">
+      <div class="features-label">Capabilities</div>
+      <h2>Everything your properties need,<br>handled automatically.</h2>
+      <div class="three-col">
+        <div class="feature-card reveal">
+          <div class="feature-icon blue">🚗</div>
+          <h3>Parking Enforcement</h3>
+          <p>Stacy identifies vehicle owners by plate number, sends immediate SMS warnings, and drafts violation invoices — all without you lifting a finger.</p>
+        </div>
+        <div class="feature-card reveal reveal-d1">
+          <div class="feature-icon green">🔧</div>
+          <h3>Maintenance Dispatch</h3>
+          <p>Tenants describe issues in plain language. Stacy creates a ticket, texts you for approval, and contacts your vendor once approved. Emergency issues get instant escalation.</p>
+        </div>
+        <div class="feature-card reveal reveal-d2">
+          <div class="feature-icon violet">💬</div>
+          <h3>24/7 Tenant Chat</h3>
+          <p>Every tenant gets instant access to Stacy. She remembers previous conversations, asks smart follow-up questions, and only escalates when human judgment is needed.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon amber">📧</div>
+          <h3>Email Triage & Response</h3>
+          <p>Stacy reads incoming tenant emails, categorizes the issue, creates a workflow, and drafts responses — maintenance, complaints, or lease questions all handled automatically.</p>
+        </div>
+        <div class="feature-card reveal reveal-d1">
+          <div class="feature-icon rose">📋</div>
+          <h3>Lease & Rent Management</h3>
+          <p>Automatic rent reminders, renewal notifications, move-in/move-out checklists, and lease document storage — all organized per property, per unit.</p>
+        </div>
+        <div class="feature-card reveal reveal-d2">
+          <div class="feature-icon blue">📊</div>
+          <h3>Operations Dashboard</h3>
+          <p>One command center for all properties, tenants, vehicles, open issues, SMS logs, and approval queues. Nothing gets lost or forgotten.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ BENEFITS GRID ═══ -->
+  <section class="features-section alt-bg">
+    <div class="container">
+      <div class="features-label">Why Property Managers Choose Stacy</div>
+      <h2>Less work. Happier tenants.<br>More profitable properties.</h2>
+      <div class="benefit-grid">
+        <div class="benefit-item reveal">
+          <div class="benefit-icon" style="background:var(--brand-soft);">⚡</div>
+          <div>
+            <h4>Instant Tenant Responses</h4>
+            <p>Tenants get answers in seconds, not hours. Complaints, questions, and requests handled immediately — even at 2am.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d1">
+          <div class="benefit-icon" style="background:var(--emerald-soft);">📉</div>
+          <div>
+            <h4>Eliminate Administrative Overload</h4>
+            <p>Stop drowning in emails, texts, and phone calls. Stacy handles the routine so you focus on growing your portfolio.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d2">
+          <div class="benefit-icon" style="background:var(--violet-soft);">🔗</div>
+          <div>
+            <h4>Automated Vendor Coordination</h4>
+            <p>Maintenance requests automatically route to your preferred vendors. Stacy contacts them, schedules repairs, and follows up.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal">
+          <div class="benefit-icon" style="background:var(--amber-soft);">🏢</div>
+          <div>
+            <h4>Property-Specific Organization</h4>
+            <p>Each property has its own database — tenants, vehicles, policies, and vendors never get mixed up across your portfolio.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d1">
+          <div class="benefit-icon" style="background:var(--rose-soft);">🚫</div>
+          <div>
+            <h4>Fewer Staffing Costs</h4>
+            <p>Replace the need for part-time assistants, answering services, and after-hours support with one AI that never calls in sick.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d2">
+          <div class="benefit-icon" style="background:var(--brand-soft);">📱</div>
+          <div>
+            <h4>Real-Time SMS Notifications</h4>
+            <p>Get texted for approvals, emergencies, and important decisions. Respond with "yes" or "no" — Stacy handles the rest.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal">
+          <div class="benefit-icon" style="background:var(--emerald-soft);">😊</div>
+          <div>
+            <h4>Higher Tenant Satisfaction</h4>
+            <p>Fast responses, professional communication, and reliable follow-through mean happier tenants who renew their leases.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d1">
+          <div class="benefit-icon" style="background:var(--violet-soft);">📝</div>
+          <div>
+            <h4>Full Audit Trail</h4>
+            <p>Every conversation, request, approval, and SMS is logged automatically. Complete documentation for any dispute or review.</p>
+          </div>
+        </div>
+        <div class="benefit-item reveal reveal-d2">
+          <div class="benefit-icon" style="background:var(--amber-soft);">📈</div>
+          <div>
+            <h4>Scales With Your Portfolio</h4>
+            <p>Whether you manage 1 property or 100, Stacy handles the load without hiring additional staff. Your margins improve as you grow.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HOW IT WORKS ═══ -->
+  <section class="how-section">
+    <div class="container">
+      <div class="features-label">Getting Started</div>
+      <h2 style="text-align:center;margin-bottom:48px;">Live in under 10 minutes.</h2>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <h3>Add Your Properties</h3>
+          <p>Enter your properties, units, and tenants. Stacy immediately understands your portfolio structure and policies.</p>
+        </div>
+        <div class="step reveal reveal-d1">
+          <div class="step-num">2</div>
+          <h3>Configure Stacy</h3>
+          <p>Set your phone number, maintenance vendor email, parking policies, and response preferences. Takes 2 minutes.</p>
+        </div>
+        <div class="step reveal reveal-d2">
+          <div class="step-num">3</div>
+          <h3>Invite Tenants</h3>
+          <p>Generate one-click invite links. Tenants get their portal and Stacy starts handling requests immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ COMPARISON ═══ -->
+  <section class="features-section alt-bg">
+    <div class="container">
+      <div class="features-label">The Difference</div>
+      <h2 style="text-align:center;">Traditional management vs. Stacy</h2>
+      <div style="max-width:700px;margin:0 auto;">
+        <table class="compare-table reveal">
+          <thead><tr><th>Task</th><th>Without Stacy</th><th>With Stacy</th></tr></thead>
+          <tbody>
+            <tr><td>Parking complaint</td><td>30 min of calls & texts</td><td><span class="check">✓</span> 10 seconds, automated</td></tr>
+            <tr><td>Maintenance request</td><td>Emails back & forth for days</td><td><span class="check">✓</span> Vendor contacted in minutes</td></tr>
+            <tr><td>Tenant question at 2am</td><td>Unanswered until morning</td><td><span class="check">✓</span> Instant response</td></tr>
+            <tr><td>Rent reminder</td><td>Manual texts every month</td><td><span class="check">✓</span> Automatic</td></tr>
+            <tr><td>Prospect inquiry</td><td>Missed email = lost tenant</td><td><span class="check">✓</span> Auto-responded with details</td></tr>
+            <tr><td>Record keeping</td><td>Scattered notes & emails</td><td><span class="check">✓</span> Full audit trail</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TESTIMONIALS ═══ -->
+  <section class="features-section">
+    <div class="container">
+      <div class="features-label">What Managers Say</div>
+      <h2 style="text-align:center;">Property managers love Stacy.</h2>
+      <div class="testimonial-grid">
+        <div class="testimonial reveal">
+          <p>"I used to spend 2 hours every morning just catching up on tenant emails. Stacy handles 90% of them before I even wake up. Game changer."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">M</div>
+            <div>
+              <div class="testimonial-name">Maria G.</div>
+              <div class="testimonial-role">12-unit complex, Miami FL</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial reveal reveal-d1">
+          <p>"The parking enforcement alone is worth it. Tenants report plates, Stacy warns them instantly, and I approve violations from my phone. No more drama."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">R</div>
+            <div>
+              <div class="testimonial-name">Roberto T.</div>
+              <div class="testimonial-role">3 properties, Fort Lauderdale FL</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial reveal reveal-d2">
+          <p>"My tenants love having 24/7 support. Renewals are up because they feel like their issues actually get handled. Stacy pays for herself 10x over."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">D</div>
+            <div>
+              <div class="testimonial-name">Danielle K.</div>
+              <div class="testimonial-role">Property management company, Orlando FL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PRICING ═══ -->
+  <section class="pricing-section" id="pricing">
+    <div class="container">
+      <div class="features-label">Pricing</div>
+      <h2>Plans that grow with your portfolio.</h2>
+      <p style="text-align:center;color:var(--text-2);font-size:16px;margin-bottom:40px;">Every plan includes Stacy AI, tenant portal, parking enforcement, maintenance dispatch, and full SMS support.</p>
+      <div class="plans-grid" id="marketingPlansGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ FAQ ═══ -->
+  <section class="features-section alt-bg">
+    <div class="container">
+      <div class="features-label">FAQ</div>
+      <h2 style="text-align:center;">Common questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">How does Stacy send text messages?</div>
+          <div class="faq-a">Stacy uses the Textbelt SMS API. You can use the free tier (1 SMS/day for testing) or get a paid API key for unlimited messaging at textbelt.com. Messages are real SMS delivered to actual phone numbers.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Can each property have different settings?</div>
+          <div class="faq-a">Yes. Every property has its own configuration — different maintenance vendors, different policies, different parking rules, and separate tenant databases. Nothing gets mixed up.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What happens if Stacy can't handle a request?</div>
+          <div class="faq-a">Stacy is designed to escalate gracefully. If she encounters something she can't resolve, she texts you immediately with all the context and lets the tenant know their request has been forwarded to management.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Do my tenants need to install an app?</div>
+          <div class="faq-a">No. The tenant portal is a web app — tenants access it from any browser on any device. You generate an invite link and they activate their account in 30 seconds.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Is payment processing included?</div>
+          <div class="faq-a">Payment processing is currently in development and will be available soon. All other features — AI chat, parking enforcement, maintenance dispatch, SMS, and tenant management — are fully functional.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to put your properties on autopilot?</h2>
+      <p>Join property managers who've eliminated hours of daily admin work by letting Stacy handle the routine.</p>
+      <div class="hero-cta">
+        <a class="btn large" style="background:#fff;color:var(--gray-900);font-weight:700;" href="./auth.html">Create free account →</a>
+        <a class="btn large" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15);" href="./tenant-auth.html">Tenant portal</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-brand">Employee<span style="color:var(--brand-light);">AI</span></span>
+        <div class="footer-links">
+          <a href="./auth.html">Landlord Login</a>
+          <a href="./tenant-auth.html">Tenant Portal</a>
+          <a href="#pricing">Pricing</a>
+        </div>
+        <span>&copy; 2026 EmployeeAI. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/plans.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // Render plans
+      const grid = document.getElementById('marketingPlansGrid');
+      if (grid && window.EmployeeAIPlanUtils) {
+        const names = window.EmployeeAIPlanUtils.listNames();
+        grid.innerHTML = names.map(n => {
+          const p = window.EmployeeAIPlanUtils.getPlan(n);
+          const monthly = n === 'Custom' ? '$999+' : `$${p.monthly}`;
+          const setup = (p.setup === null || p.setup === undefined) ? 'Inquire for info' : `$${p.setup} setup fee`;
+          const bullets = Array.isArray(p.bullets) ? p.bullets.map(b => `<li>${b}</li>`).join('') : '';
+          const isPopular = n === 'Managers';
+          return `<div class="plan-card${isPopular ? ' current' : ''}" style="animation:fadeUp 0.5s ease both;">
+            ${isPopular ? '<span class="popular-tag">Most Popular</span>' : ''}
+            <div class="plan-name">${n}</div>
+            <div class="plan-price">${monthly}<span>/mo</span></div>
+            <div class="plan-setup">${setup}</div>
+            <ul>${bullets}</ul>
+            <a href="./auth.html" class="btn ${isPopular ? 'primary' : 'ghost'} full">Get started</a>
+          </div>`;
+        }).join('');
+      }
+
+      // Scroll reveal
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+      // FAQ toggles
+      document.querySelectorAll('.faq-q').forEach(q => {
+        q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+      });
+    });
+  </script>
+</body>
+</html>

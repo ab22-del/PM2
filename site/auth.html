@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Landlord Sign In</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="./index.html">Employee<span>AI</span></a>
+      <a class="btn ghost" href="./index.html">← Back</a>
+    </div>
+  </nav>
+  <div class="auth-shell">
+    <div class="auth-card" style="animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+      <div class="auth-logo">
+        <div class="logo-icon">🏢</div>
+        <h2>Landlord Portal</h2>
+        <p class="auth-sub">Property management powered by Stacy AI</p>
+      </div>
+      <div class="tabs">
+        <button id="signupTab" class="active" type="button">Create account</button>
+        <button id="loginTab" type="button">Sign in</button>
+      </div>
+      <form id="signupForm">
+        <label>Full name
+          <input class="input" required name="fullName" placeholder="Jane Smith" />
+        </label>
+        <div class="form-grid">
+          <label>Email
+            <input class="input" type="email" required name="email" placeholder="jane@company.com" />
+          </label>
+          <label>Company
+            <input class="input" name="company" placeholder="Sunset Properties" />
+          </label>
+        </div>
+        <label>Password
+          <input class="input" type="password" required name="password" minlength="6" placeholder="Min 6 characters" />
+        </label>
+        <button class="btn primary full" type="submit" style="margin-top:22px;">Create account →</button>
+      </form>
+      <form id="loginForm" class="hidden">
+        <label>Email
+          <input class="input" type="email" required name="email" placeholder="your@email.com" />
+        </label>
+        <label>Password
+          <input class="input" type="password" required name="password" />
+        </label>
+        <button class="btn primary full" type="submit" style="margin-top:22px;">Sign in →</button>
+      </form>
+      <div id="authAlert" class="alert hidden"></div>
+      <p style="text-align:center;font-size:13px;color:var(--text-3);margin-top:20px;">
+        Are you a tenant? <a href="./tenant-auth.html">Go to Tenant Portal →</a>
+      </p>
+    </div>
+  </div>
+  <script src="./js/auth.js"></script>
+  <script>
+    const signupTab = document.getElementById("signupTab");
+    const loginTab = document.getElementById("loginTab");
+    const signupForm = document.getElementById("signupForm");
+    const loginForm = document.getElementById("loginForm");
+    const authAlert = document.getElementById("authAlert");
+    const showAlert = (m) => { authAlert.classList.remove("hidden"); authAlert.textContent = m; };
+    const clearAlert = () => { authAlert.classList.add("hidden"); authAlert.textContent = ""; };
+    const switchTab = (tab) => {
+      clearAlert();
+      const s = tab === "signup";
+      signupTab.classList.toggle("active", s);
+      loginTab.classList.toggle("active", !s);
+      signupForm.classList.toggle("hidden", !s);
+      loginForm.classList.toggle("hidden", s);
+    };
+    signupTab.addEventListener("click", () => switchTab("signup"));
+    loginTab.addEventListener("click", () => switchTab("login"));
+    signupForm.addEventListener("submit", (e) => {
+      e.preventDefault(); clearAlert();
+      const r = window.EmployeeAIAuth.signup(Object.fromEntries(new FormData(signupForm)));
+      if (!r.ok) return showAlert(r.message);
+      window.location.href = window.EmployeeAIAuth.destinationFor(r.user);
+    });
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault(); clearAlert();
+      const r = window.EmployeeAIAuth.login(Object.fromEntries(new FormData(loginForm)));
+      if (!r.ok) return showAlert(r.message);
+      window.location.href = window.EmployeeAIAuth.destinationFor(r.user);
+    });
+  </script>
+</body>
+</html>

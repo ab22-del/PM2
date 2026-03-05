@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard — PropManage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/style.css">
+    <style>
+        body { background: #F1F5F9; }
+
+        /* ─── Sidebar ──────────────────────── */
+        .app-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px; background: #1a1025; color: white;
+            display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 50;
+        }
+        .sidebar-logo {
+            padding: 24px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .sidebar-logo .logo-icon {
+            width: 36px; height: 36px; background: linear-gradient(135deg, #9333EA, #7C3AED); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;
+        }
+        .sidebar-logo span { font-size: 20px; font-weight: 800; }
+        .sidebar-logo .badge {
+            font-size: 10px; background: #9333EA; color: white; padding: 2px 8px;
+            border-radius: 20px; font-weight: 600; margin-left: auto;
+        }
+        .sidebar-nav { padding: 16px 12px; flex: 1; }
+        .sidebar-nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 10px; color: #94A3B8;
+            font-size: 14px; font-weight: 500; transition: all 0.2s; margin-bottom: 4px; cursor: pointer;
+        }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: white; }
+        .sidebar-nav a.active { background: rgba(147,51,234,0.2); color: #C084FC; font-weight: 600; }
+        .sidebar-nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-nav .section-label {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #475569; padding: 20px 16px 8px; font-weight: 600;
+        }
+        .sidebar-user {
+            padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #9333EA, #7C3AED);
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+        }
+        .sidebar-user .info { flex: 1; }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 12px; color: #C084FC; }
+        .sidebar-user .logout-btn {
+            background: none; border: none; color: #64748B; cursor: pointer; font-size: 16px;
+            padding: 4px; transition: color 0.2s;
+        }
+        .sidebar-user .logout-btn:hover { color: #EF4444; }
+
+        /* ─── Main Content ─────────────────── */
+        .main-content { flex: 1; margin-left: 260px; padding: 32px; }
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 28px; font-weight: 800; }
+        .page-header .subtitle { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+
+        /* ─── Stats ────────────────────────── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white; border-radius: var(--radius); padding: 24px;
+            box-shadow: var(--shadow-sm); transition: all 0.3s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px;
+        }
+        .stat-card .stat-icon.purple { background: #F3E8FF; }
+        .stat-card .stat-icon.blue { background: #EEF2FF; }
+        .stat-card .stat-icon.green { background: #D1FAE5; }
+        .stat-card .stat-icon.orange { background: #FEF3C7; }
+        .stat-card .stat-icon.red { background: #FEE2E2; }
+        .stat-card .stat-value { font-size: 32px; font-weight: 800; color: var(--dark); }
+        .stat-card .stat-label { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+
+        /* ─── Panels ───────────────────────── */
+        .panel {
+            background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm);
+            margin-bottom: 24px; overflow: hidden;
+        }
+        .panel-header {
+            padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .panel-header h3 { font-size: 18px; font-weight: 700; }
+        .panel-body { padding: 24px; }
+        .panel-body.no-pad { padding: 0; }
+
+        /* ─── Tables ──────────────────────── */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            text-align: left; padding: 12px 16px; font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500);
+            border-bottom: 2px solid var(--gray-100); background: #FAFBFC;
+        }
+        .data-table td {
+            padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--gray-100);
+        }
+        .data-table tr:hover td { background: #F8FAFC; }
+
+        /* ─── Badges ──────────────────────── */
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-info { background: #EEF2FF; color: #3730A3; }
+        .badge-purple { background: #F3E8FF; color: #6B21A8; }
+
+        /* ─── Section visibility ───────────── */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ─── Empty State ──────────────────── */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--gray-400);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 20px; color: var(--gray-600); margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; margin-bottom: 24px; }
+
+        /* ─── Action Buttons ───────────────── */
+        .btn-sm {
+            padding: 6px 14px; font-size: 12px; border-radius: 8px;
+            border: none; cursor: pointer; font-weight: 600; transition: all 0.2s;
+        }
+        .btn-sm.btn-success { background: #D1FAE5; color: #065F46; }
+        .btn-sm.btn-success:hover { background: #A7F3D0; }
+        .btn-sm.btn-danger { background: #FEE2E2; color: #991B1B; }
+        .btn-sm.btn-danger:hover { background: #FECACA; }
+        .btn-sm.btn-purple { background: #F3E8FF; color: #6B21A8; }
+        .btn-sm.btn-purple:hover { background: #E9D5FF; }
+
+        /* ─── Modal ────────────────────────── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 100; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; border-radius: 16px; padding: 32px;
+            width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .modal .form-group { margin-bottom: 16px; }
+        .modal .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--gray-700); }
+        .modal .form-control {
+            width: 100%; padding: 10px 14px; border: 2px solid var(--gray-200);
+            border-radius: 10px; font-size: 14px; transition: border-color 0.2s;
+        }
+        .modal .form-control:focus { border-color: #9333EA; outline: none; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .modal-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+        .btn-purple { background: #9333EA; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .btn-purple:hover { background: #7C3AED; }
+        .btn-outline { background: transparent; border: 2px solid var(--gray-200); border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--gray-600); }
+        .btn-outline:hover { background: var(--gray-50); }
+
+        /* ─── Revenue highlight ─────────────── */
+        .revenue-card {
+            background: linear-gradient(135deg, #9333EA, #7C3AED); color: white;
+            border-radius: var(--radius); padding: 28px; margin-bottom: 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .revenue-card .rev-info h2 { font-size: 36px; font-weight: 800; }
+        .revenue-card .rev-info p { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+        .revenue-card .rev-details { text-align: right; }
+        .revenue-card .rev-details div { font-size: 14px; opacity: 0.9; margin-bottom: 6px; }
+        .revenue-card .rev-details span { font-weight: 700; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">P</div>
+            <span>PropManage</span>
+            <span class="badge">OWNER</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="section-label">Platform</div>
+            <a href="#" class="active" data-section="dashboard"><span class="icon">&#128200;</span> Dashboard</a>
+            <a href="#" data-section="landlords"><span class="icon">&#128100;</span> Landlords</a>
+            <a href="#" data-section="payouts"><span class="icon">&#128176;</span> Payouts</a>
+
+            <div class="section-label">Overview</div>
+            <a href="#" data-section="properties"><span class="icon">&#127968;</span> All Properties</a>
+            <a href="#" data-section="subscriptions"><span class="icon">&#128179;</span> Subscriptions</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="avatar" id="user-avatar">OW</div>
+            <div class="info">
+                <div class="name" id="user-name">Owner</div>
+                <div class="role">Platform Owner</div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Sign Out">&#9211;</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- ═══ Dashboard Section ═══ -->
+        <div class="section active" id="section-dashboard">
+            <div class="page-header">
+                <div>
+                    <h1>Platform Dashboard</h1>
+                    <p class="subtitle" id="greeting">Welcome back, Owner</p>
+                </div>
+            </div>
+
+            <div class="revenue-card">
+                <div class="rev-info">
+                    <h2 id="revenue-total">$0</h2>
+                    <p>Monthly Recurring Revenue</p>
+                </div>
+                <div class="rev-details">
+                    <div>Active Subscriptions: <span id="rev-subs">0</span></div>
+                    <div>Pending Payouts: <span id="rev-pending">$0</span></div>
+                    <div>Total Paid Out: <span id="rev-paid">$0</span></div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon purple">&#128100;</div>
+                    <div class="stat-value" id="stat-landlords">0</div>
+                    <div class="stat-label">Landlords</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">&#128101;</div>
+                    <div class="stat-value" id="stat-tenants">0</div>
+                    <div class="stat-label">Tenants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">&#127968;</div>
+                    <div class="stat-value" id="stat-properties">0</div>
+                    <div class="stat-label">Properties</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">&#128295;</div>
+                    <div class="stat-value" id="stat-maintenance">0</div>
+                    <div class="stat-label">Open Maintenance</div>
+                </div>
+            </div>
+
+            <div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-card">
+                    <div class="stat-icon green">&#127970;</div>
+                    <div class="stat-value" id="stat-units">0</div>
+                    <div class="stat-label">Total Units</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">&#9989;</div>
+                    <div class="stat-value" id="stat-occupied">0</div>
+                    <div class="stat-label">Occupied Units</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">&#128179;</div>
+                    <div class="stat-value" id="stat-active-subs">0</div>
+                    <div class="stat-label">Active Subscriptions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Landlords Section ═══ -->
+        <div class="section" id="section-landlords">
+            <div class="page-header">
+                <div>
+                    <h1>Landlords</h1>
+                    <p class="subtitle">Manage all registered landlords on the platform</p>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-body no-pad">
+                    <table class="data-table" id="landlords-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Properties</th>
+                                <th>Tenants</th>
+                                <th>Revenue</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="landlords-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Payouts Section ═══ -->
+        <div class="section" id="section-payouts">
+            <div class="page-header">
+                <div>
+                    <h1>Payouts</h1>
+                    <p class="subtitle">Manage landlord payouts and payment history</p>
+                </div>
+                <button class="btn btn-purple" onclick="openModal('payout-modal')">+ New Payout</button>
+            </div>
+            <div class="panel">
+                <div class="panel-body no-pad">
+                    <table class="data-table" id="payouts-table">
+                        <thead>
+                            <tr>
+                                <th>Landlord</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payouts-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Properties Section ═══ -->
+        <div class="section" id="section-properties">
+            <div class="page-header">
+                <div>
+                    <h1>All Properties</h1>
+                    <p class="subtitle">Overview of all properties across the platform</p>
+                </div>
+            </div>
+            <div id="properties-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            </div>
+        </div>
+
+        <!-- ═══ Subscriptions Section ═══ -->
+        <div class="section" id="section-subscriptions">
+            <div class="page-header">
+                <div>
+                    <h1>Subscriptions</h1>
+                    <p class="subtitle">Overview of all active subscription plans</p>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-body no-pad">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Landlord</th>
+                                <th>Plan</th>
+                                <th>Monthly Price</th>
+                                <th>Properties</th>
+                                <th>Tenants</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptions-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══ New Payout Modal ═══ -->
+<div class="modal-overlay" id="payout-modal">
+    <div class="modal">
+        <h3>Create New Payout</h3>
+        <form onsubmit="handleCreatePayout(event)">
+            <div class="form-group">
+                <label>Landlord</label>
+                <select class="form-control" id="payout-landlord" required>
+                    <option value="">Select Landlord...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Amount ($)</label>
+                <input type="number" class="form-control" id="payout-amount" step="0.01" min="0.01" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" class="form-control" id="payout-description" placeholder="Monthly rent payout, refund, etc.">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('payout-modal')">Cancel</button>
+                <button type="submit" class="btn btn-purple" id="payout-btn">Create Payout</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/web/js/app.js"></script>
+<script>
+// ─── Auth Check ─────────────────────────────────────────
+const user = getUser();
+if (!isLoggedIn() || !user || user.role !== 'owner') {
+    window.location.href = '/web/landlord-login.html';
+}
+
+// ─── Setup ──────────────────────────────────────────────
+document.getElementById('user-name').textContent = `${user.first_name} ${user.last_name}`;
+document.getElementById('user-avatar').textContent = (user.first_name[0] + user.last_name[0]).toUpperCase();
+document.getElementById('greeting').textContent = `Welcome back, ${user.first_name}`;
+
+// ─── Navigation ─────────────────────────────────────────
+document.querySelectorAll('.sidebar-nav a[data-section]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = link.dataset.section;
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+        document.getElementById('section-' + section).classList.add('active');
+        link.classList.add('active');
+
+        if (section === 'dashboard') loadDashboard();
+        if (section === 'landlords') loadLandlords();
+        if (section === 'payouts') loadPayouts();
+        if (section === 'properties') loadProperties();
+        if (section === 'subscriptions') loadSubscriptions();
+    });
+});
+
+// ─── Logout ─────────────────────────────────────────────
+function handleLogout() {
+    clearAuth();
+    window.location.href = '/web/landlord-login.html';
+}
+
+// ─── Load Dashboard ─────────────────────────────────────
+let cachedLandlords = [];
+
+async function loadDashboard() {
+    try {
+        const stats = await apiCall('/api/owner/stats');
+        document.getElementById('stat-landlords').textContent = stats.total_landlords;
+        document.getElementById('stat-tenants').textContent = stats.total_tenants;
+        document.getElementById('stat-properties').textContent = stats.total_properties;
+        document.getElementById('stat-maintenance').textContent = stats.open_maintenance;
+        document.getElementById('stat-units').textContent = stats.total_units;
+        document.getElementById('stat-occupied').textContent = stats.occupied_units;
+        document.getElementById('stat-active-subs').textContent = stats.active_subscriptions;
+        document.getElementById('revenue-total').textContent = formatCurrency(stats.monthly_revenue);
+        document.getElementById('rev-subs').textContent = stats.active_subscriptions;
+        document.getElementById('rev-pending').textContent = formatCurrency(stats.pending_payouts);
+        document.getElementById('rev-paid').textContent = formatCurrency(stats.total_payouts);
+    } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+    }
+}
+
+// ─── Load Landlords ─────────────────────────────────────
+async function loadLandlords() {
+    try {
+        const landlords = await apiCall('/api/owner/landlords');
+        cachedLandlords = landlords;
+        const tbody = document.getElementById('landlords-body');
+
+        if (landlords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px; color:#94A3B8;">No landlords registered yet</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = landlords.map(ll => `
+            <tr>
+                <td><strong>${ll.first_name} ${ll.last_name}</strong></td>
+                <td>${ll.email}</td>
+                <td>${ll.plan ? `<span class="badge badge-purple">${ll.plan.toUpperCase()}</span>` : '<span class="badge badge-warning">No Plan</span>'}</td>
+                <td>${ll.properties}</td>
+                <td>${ll.tenants}</td>
+                <td>${formatCurrency(ll.monthly_price)}/mo</td>
+                <td>${ll.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Disabled</span>'}</td>
+                <td>
+                    <button class="btn-sm ${ll.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleLandlord(${ll.id}, ${ll.is_active})">
+                        ${ll.is_active ? 'Disable' : 'Enable'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Update payout dropdown
+        updatePayoutDropdown(landlords);
+    } catch (err) {
+        console.error('Failed to load landlords:', err);
+    }
+}
+
+function updatePayoutDropdown(landlords) {
+    const select = document.getElementById('payout-landlord');
+    select.innerHTML = '<option value="">Select Landlord...</option>' +
+        landlords.map(ll => `<option value="${ll.id}">${ll.first_name} ${ll.last_name} (${ll.email})</option>`).join('');
+}
+
+async function toggleLandlord(id, isActive) {
+    if (!confirm(`Are you sure you want to ${isActive ? 'disable' : 'enable'} this landlord?`)) return;
+    try {
+        await apiCall(`/api/owner/landlords/${id}/status`, { method: 'PUT' });
+        showToast(`Landlord ${isActive ? 'disabled' : 'enabled'} successfully`);
+        loadLandlords();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+// ─── Load Payouts ───────────────────────────────────────
+async function loadPayouts() {
+    try {
+        const payouts = await apiCall('/api/owner/payouts');
+        const tbody = document.getElementById('payouts-body');
+
+        if (payouts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94A3B8;">No payouts yet. Create your first payout above.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = payouts.map(p => `
+            <tr>
+                <td><strong>${p.landlord_name}</strong><br><small style="color:#94A3B8;">${p.landlord_email}</small></td>
+                <td><strong>${formatCurrency(p.amount)}</strong></td>
+                <td>${p.description || '-'}</td>
+                <td>
+                    <span class="badge ${p.status === 'completed' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-danger'}">
+                        ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                    </span>
+                </td>
+                <td>${formatDate(p.created_at)}</td>
+                <td>
+                    ${p.status === 'pending' ? `<button class="btn-sm btn-success" onclick="completePayout(${p.id})">Mark Paid</button>` : `<span style="color:#94A3B8; font-size:12px;">Completed ${formatDate(p.completed_at)}</span>`}
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error('Failed to load payouts:', err);
+    }
+}
+
+async function completePayout(id) {
+    if (!confirm('Mark this payout as completed?')) return;
+    try {
+        await apiCall(`/api/owner/payouts/${id}/complete`, { method: 'PUT' });
+        showToast('Payout marked as completed');
+        loadPayouts();
+        loadDashboard();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function handleCreatePayout(e) {
+    e.preventDefault();
+    const btn = document.getElementById('payout-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+
+    try {
+        await apiCall('/api/owner/payouts', {
+            method: 'POST',
+            body: JSON.stringify({
+                landlord_id: parseInt(document.getElementById('payout-landlord').value),
+                amount: parseFloat(document.getElementById('payout-amount').value),
+                description: document.getElementById('payout-description').value,
+            }),
+        });
+        showToast('Payout created successfully');
+        closeModal('payout-modal');
+        document.getElementById('payout-amount').value = '';
+        document.getElementById('payout-description').value = '';
+        loadPayouts();
+        loadDashboard();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Payout';
+    }
+}
+
+// ─── Load Properties ────────────────────────────────────
+async function loadProperties() {
+    try {
+        const props = await apiCall('/api/properties');
+        const container = document.getElementById('properties-list');
+
+        if (props.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">&#127968;</div><h3>No properties on the platform yet</h3></div>';
+            return;
+        }
+
+        container.innerHTML = props.map(p => `
+            <div style="background:white; border:2px solid var(--gray-100); border-radius:var(--radius); padding:24px; transition:all 0.3s;">
+                <h4 style="font-size:18px; font-weight:700; margin-bottom:8px;">${p.name}</h4>
+                <p style="font-size:14px; color:var(--gray-500); margin-bottom:16px;">${p.address}, ${p.city}, ${p.state} ${p.zip_code}</p>
+                <div style="display:flex; gap:16px;">
+                    <span style="font-size:13px; color:var(--gray-600);">&#127970; ${p.total_units} units</span>
+                    <span style="font-size:13px; color:var(--gray-600);">&#128663; Max ${p.max_vehicles_per_unit} vehicles/unit</span>
+                    <span style="font-size:13px; color:var(--gray-600);">&#128176; $${p.parking_violation_fee} violation fee</span>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Failed to load properties:', err);
+    }
+}
+
+// ─── Load Subscriptions ─────────────────────────────────
+async function loadSubscriptions() {
+    try {
+        if (cachedLandlords.length === 0) {
+            const landlords = await apiCall('/api/owner/landlords');
+            cachedLandlords = landlords;
+        }
+
+        const tbody = document.getElementById('subscriptions-body');
+        const withPlans = cachedLandlords.filter(ll => ll.plan);
+        const withoutPlans = cachedLandlords.filter(ll => !ll.plan);
+
+        if (cachedLandlords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94A3B8;">No subscriptions yet</td></tr>';
+            return;
+        }
+
+        const rows = withPlans.map(ll => `
+            <tr>
+                <td><strong>${ll.first_name} ${ll.last_name}</strong><br><small style="color:#94A3B8;">${ll.email}</small></td>
+                <td><span class="badge badge-purple">${ll.plan.toUpperCase()}</span></td>
+                <td><strong>${formatCurrency(ll.monthly_price)}</strong>/mo</td>
+                <td>${ll.properties}</td>
+                <td>${ll.tenants}</td>
+                <td><span class="badge badge-success">Active</span></td>
+            </tr>
+        `).join('');
+
+        const noplan = withoutPlans.map(ll => `
+            <tr style="opacity:0.6;">
+                <td><strong>${ll.first_name} ${ll.last_name}</strong><br><small style="color:#94A3B8;">${ll.email}</small></td>
+                <td><span class="badge badge-warning">No Plan</span></td>
+                <td>-</td>
+                <td>${ll.properties}</td>
+                <td>${ll.tenants}</td>
+                <td><span class="badge badge-warning">Inactive</span></td>
+            </tr>
+        `).join('');
+
+        tbody.innerHTML = rows + noplan;
+    } catch (err) {
+        console.error('Failed to load subscriptions:', err);
+    }
+}
+
+// ─── Modal Helpers ──────────────────────────────────────
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    // Pre-load landlords for the dropdown
+    if (id === 'payout-modal' && cachedLandlords.length > 0) {
+        updatePayoutDropdown(cachedLandlords);
+    } else if (id === 'payout-modal') {
+        loadLandlords();
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+    });
+});
+
+// ─── Init ───────────────────────────────────────────────
+loadDashboard();
+loadLandlords();
+</script>
+</body>
+</html>

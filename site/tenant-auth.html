@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EmployeeAI — Tenant Access</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="./index.html">Employee<span>AI</span></a>
+      <a class="btn ghost" href="./auth.html">Landlord login</a>
+    </div>
+  </nav>
+  <div class="auth-shell">
+    <div class="auth-card" style="animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+      <div class="auth-logo">
+        <div class="logo-icon">🏠</div>
+        <h2>Tenant Portal</h2>
+        <p class="auth-sub">New here? Activate with your invite code. Returning residents, sign in below.</p>
+      </div>
+      <div class="tabs">
+        <button id="activateTab" class="active" type="button">Activate invite</button>
+        <button id="loginTab" type="button">Sign in</button>
+      </div>
+      <form id="tenantInviteForm">
+        <label>Invite token
+          <input class="input" name="invite" id="inviteTokenInput" required placeholder="Paste from your invite link" />
+        </label>
+        <label>Your email address
+          <input class="input" type="email" name="email" required placeholder="you@email.com" />
+        </label>
+        <label>Create a password
+          <input class="input" type="password" name="password" minlength="6" required placeholder="Choose a secure password" />
+        </label>
+        <button class="btn primary full" type="submit" style="margin-top:22px;">Activate my account →</button>
+      </form>
+      <form id="tenantLoginForm" class="hidden">
+        <label>Email address
+          <input class="input" type="email" name="email" required placeholder="you@email.com" />
+        </label>
+        <label>Password
+          <input class="input" type="password" name="password" minlength="6" required />
+        </label>
+        <button class="btn primary full" type="submit" style="margin-top:22px;">Sign in →</button>
+      </form>
+      <div id="tenantAlert" class="alert hidden"></div>
+      <p style="text-align:center;font-size:13px;color:var(--text-3);margin-top:20px;">
+        Don't have an invite? Contact your property manager to request one.
+      </p>
+    </div>
+  </div>
+  <script src="./js/tenant.js"></script>
+</body>
+</html>

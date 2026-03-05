@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select a Plan — PropManage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #F8FAFC, #EEF2FF);
+        }
+        .plans-header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        .plans-header .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+        .plans-header .logo .logo-icon {
+            width: 40px; height: 40px; background: var(--gradient); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 800;
+        }
+        .plans-header .logo span {
+            font-size: 24px; font-weight: 800;
+            background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .plans-header h1 { font-size: 40px; font-weight: 800; margin-bottom: 12px; color: var(--dark); }
+        .plans-header p { font-size: 18px; color: var(--gray-500); }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+        .plan-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .plan-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+        .plan-card.popular {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+        .plan-card.popular:hover {
+            transform: scale(1.05) translateY(-8px);
+        }
+        .popular-badge {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            padding: 4px 16px; background: var(--gradient); color: white;
+            font-size: 12px; font-weight: 700; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .plan-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .plan-price { font-size: 44px; font-weight: 800; color: var(--primary); margin: 16px 0 4px; }
+        .plan-price span { font-size: 16px; font-weight: 500; color: var(--gray-400); }
+        .plan-setup { font-size: 13px; color: var(--gray-400); margin-bottom: 24px; }
+        .plan-features {
+            list-style: none; text-align: left; margin-bottom: 28px; flex: 1;
+        }
+        .plan-features li {
+            padding: 8px 0; font-size: 14px; color: var(--gray-600);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .plan-features li::before {
+            content: '\2713'; color: var(--success); font-weight: 700;
+        }
+        .plan-card .btn { width: 100%; padding: 14px; font-size: 15px; }
+        .plan-note {
+            text-align: center; padding: 20px 24px 60px;
+            color: var(--gray-500); font-size: 15px;
+        }
+        .plan-note a { color: var(--primary); font-weight: 600; }
+
+        @media (max-width: 1024px) { .plans-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .plans-grid { grid-template-columns: 1fr; max-width: 400px; } .plan-card.popular { transform: none; } }
+    </style>
+</head>
+<body>
+<div class="plans-header">
+    <div class="logo">
+        <div class="logo-icon">P</div>
+        <span>PropManage</span>
+    </div>
+    <h1>Choose Your Plan</h1>
+    <p>Select the plan that fits your property portfolio. Upgrade anytime as you grow.</p>
+</div>
+
+<div class="plans-grid" id="plans-grid">
+    <!-- Plans loaded dynamically -->
+</div>
+
+<p class="plan-note">
+    None of these plans work for you? <a href="mailto:sales@propmanage.com">Email us for a personal quote</a> — include your number of properties, tenants, and location.
+</p>
+
+<script src="/web/js/app.js"></script>
+<script>
+    // Must be logged in as landlord
+    if (!isLoggedIn() || getUser()?.role !== 'landlord') {
+        window.location.href = '/web/landlord-login.html';
+    }
+
+    const planMeta = [
+        { key: 'base', name: 'Base', price: '$199', priceNote: '/mo', setup: '+ $59 Initial Setup Fee', popular: false,
+          features: ['Up to 1 Property', 'Up to 20 Tenants', 'AI Assistant (Stacy)', 'Maintenance Management', 'Parking Enforcement', 'SMS & Email Alerts'] },
+        { key: 'medium', name: 'Medium', price: '$349', priceNote: '/mo', setup: '+ $59 Initial Setup Fee', popular: false,
+          features: ['Up to 2 Properties', 'Up to 50 Tenants', 'Everything in Base', 'Priority Support', 'Advanced Reporting', 'Vehicle Registry'] },
+        { key: 'managers', name: 'Managers', price: '$549', priceNote: '/mo', setup: '+ $59 Initial Setup Fee', popular: true,
+          features: ['Up to 4 Properties', 'Up to 200 Tenants', 'Everything in Medium', 'Multi-Property Dashboard', 'Vendor Coordination', 'Automated Invoicing'] },
+        { key: 'landlord', name: 'Landlord', price: '$649', priceNote: '/mo', setup: '+ $59 Initial Setup Fee', popular: false,
+          features: ['Up to 6 Properties', 'Up to 320 Tenants', 'Everything in Managers', 'Dedicated Account Manager', 'Custom Workflows', 'API Access'] },
+        { key: 'custom', name: 'Custom', price: '$999+', priceNote: '/mo', setup: 'Inquire for more information', popular: false,
+          features: ['Unlimited Properties', 'Unlimited Tenants', 'Everything in Landlord', 'White-Label Options', 'Custom Integrations', 'Enterprise Support'] },
+    ];
+
+    const grid = document.getElementById('plans-grid');
+    planMeta.forEach(plan => {
+        const card = document.createElement('div');
+        card.className = `plan-card${plan.popular ? ' popular' : ''}`;
+        card.innerHTML = `
+            ${plan.popular ? '<div class="popular-badge">Most Popular</div>' : ''}
+            <h3>${plan.name}</h3>
+            <div class="plan-price">${plan.price}<span>${plan.priceNote}</span></div>
+            <div class="plan-setup">${plan.setup}</div>
+            <ul class="plan-features">
+                ${plan.features.map(f => `<li>${f}</li>`).join('')}
+            </ul>
+            ${plan.key === 'custom'
+                ? `<a href="mailto:sales@propmanage.com" class="btn btn-secondary">Contact Sales</a>`
+                : `<button class="btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}" onclick="selectPlan('${plan.key}')">Select Plan</button>`
+            }
+        `;
+        grid.appendChild(card);
+    });
+
+    async function selectPlan(planKey) {
+        try {
+            const data = await apiCall('/api/subscription', {
+                method: 'POST',
+                body: JSON.stringify({ plan: planKey }),
+            });
+
+            // Update user info
+            const user = getUser();
+            user.has_plan = true;
+            localStorage.setItem('pm_user', JSON.stringify(user));
+
+            showToast('Plan activated successfully!');
+            setTimeout(() => {
+                window.location.href = '/web/landlord-portal.html';
+            }, 1000);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+</script>
+</body>
+</html>
